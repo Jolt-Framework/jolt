@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.13.0",
+    "mime-types": "^2.1.30"
+  },
+  "name": "owens-super-awesome-s3",
+  "description": "",
+  "version": "1.0.1",
+  "main": "s3.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/core-jamstack/owens-super-awesome-s3.git"
+  },
+  "author": "Christian Larwood, Ezra Ellette, Rodney Matambo, Owen Lenz",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/core-jamstack/owens-super-awesome-s3/issues"
+  },
+  "homepage": "https://github.com/core-jamstack/owens-super-awesome-s3#readme"
+}
