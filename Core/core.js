@@ -89,9 +89,11 @@ class CORE {
       let path = request.uri.split("/").slice(2).join("/");
       let url = "${apiUrl}/" + path
 
+      console.log(event);
+      
       callback(null, {
-        status: '302',
-          statusDescription: 'Found',
+        status: '307',
+          statusDescription: 'Temporary Redirect',
           headers: {
               location: [{
                   key: 'Location',
