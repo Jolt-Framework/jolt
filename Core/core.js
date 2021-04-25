@@ -6,7 +6,7 @@ const walkDirs = require("../Utilities/walkDirs");
 const fs = require("fs");
 const Zip = require("adm-zip");
 const uuid = require("uuid");
-const config = require('./config.json');
+const config = require("./config.json");
 const { zipFunction } = require("../Utilities/zip-it-and-ship-it/src/main");
 
 class CORE {
@@ -41,7 +41,9 @@ class CORE {
 
       await zipFunction(path, "archives");
 
-      let zippedFileBuffer = fs.readFileSync(path.replace("functions", "archives").replace(".js", ".zip"));
+      let zippedFileBuffer = fs.readFileSync(
+        path.replace("functions", "archives").replace(".js", ".zip")
+      );
 
       // const zipper = new Zip();
 
@@ -87,9 +89,9 @@ class CORE {
     return `exports.handler = (event, _, callback) => {
       let request = event.Records[0].cf.request;
       let path = request.uri.split("/").slice(2).join("/");
-      let url = "${apiUrl}/" + path
-
-      console.log(event);
+      let url = "${apiUrl}/" + path;
+      
+      console.log("the event", event);
       
       callback(null, {
         status: '307',
@@ -141,7 +143,7 @@ class CORE {
    */
 
   static async deployToCloudFront(bucket, proxyArn, callerReference) {
-    const {region} = config.core;
+    const { region } = config.core;
     let client = new CloudFrontWrapper(region);
     let distribution = await client.createDistribution(
       bucket.bucketName + ".s3.amazonaws.com",
@@ -154,11 +156,11 @@ class CORE {
 
   static async updateCors(domainName) {
     try {
-      await this.api.updateCors(domainName)
-      console.log("successfully updated cors")
+      await this.api.updateCors(domainName);
+      console.log("successfully updated cors");
     } catch (error) {
       console.log("unable to create cors");
-      throw new Error(error.message)
+      throw new Error(error.message);
     }
   }
 }
