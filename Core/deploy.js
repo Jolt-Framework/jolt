@@ -19,6 +19,10 @@ const run = async () => {
 
     const builder = new Builder(buildCommand);
     await builder.build();
+    // REMOVE THIS LATER
+    const builder2 = new Builder("cd Demo && mv -r build ../");
+    await builder2.build();
+    // END REMOVE THIS LATER
     console.log("Build completed!");
     // const builder = new Builder(buildCommand);
     // await builder.build();
@@ -37,7 +41,7 @@ const run = async () => {
   const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
   const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, ref);
 
-  const { DomainName: domainName} = distribution;
+  const { DomainName: domainName } = distribution;
   console.log("Successfully deployed application find it here:\n", domainName);
 
   // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist

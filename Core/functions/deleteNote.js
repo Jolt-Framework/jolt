@@ -2,8 +2,8 @@ const faunadb = require("faunadb");
 const query = faunadb.query;
 
 exports.handler = async (event, context, callback) => {
-  console.log("here's what's being sent via axios:", event.id);
-  const id = event.id;
+  let body = JSON.parse(event.body);
+  const id = body.id;
   const client = new faunadb.Client({
     secret: "fnAEF427OEACACbf49t6UGoWeJ54LKYxzE8P--I0",
   });

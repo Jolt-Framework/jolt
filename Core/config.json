@@ -1,7 +1,7 @@
 {
   "deploy": {
-    "buildCommand": "cd Demo && npm i && npm run build && cd ..",
-    "bucket": "new-bucket-12312fsdaf2"
+    "buildCommand": "cd Demo && npm i && npm run build",
+    "bucket": "new-bucket-etwesfchdy"
   },
   "core": {
     "functionsFolder": "functions",

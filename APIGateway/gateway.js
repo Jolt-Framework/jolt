@@ -1,4 +1,7 @@
-const { AuthorizationType, IntegrationType } = require("@aws-sdk/client-apigatewayv2");
+const {
+  AuthorizationType,
+  IntegrationType,
+} = require("@aws-sdk/client-apigatewayv2");
 const gateway = require("@aws-sdk/client-apigatewayv2");
 //TODO: Make sure API is created before invoking any function besides create.
 
@@ -30,7 +33,7 @@ class Gateway {
    * @param {string} apiName
    */
   constructor(apiName) {
-    this.client = new gateway.ApiGatewayV2({ "REGION": "us-east-1" });
+    this.client = new gateway.ApiGatewayV2({ REGION: "us-east-1" });
     this.apiName = apiName;
     Gateway.all.push(this);
   }
@@ -42,11 +45,17 @@ class Gateway {
    */
   async deploy(StageName, Description) {
     try {
-      const data = await this.client.createDeployment({ ApiId: this.apiId, StageName, Description });
+      const data = await this.client.createDeployment({
+        ApiId: this.apiId,
+        StageName,
+        Description,
+      });
       // this.#stages.push(StageName);
       return data;
     } catch (error) {
-      console.log(`unable to deploy api gateway with an id of: ${this.apiId} to the stage: ${StageName}`);
+      console.log(
+        `unable to deploy api gateway with an id of: ${this.apiId} to the stage: ${StageName}`
+      );
       throw new Error(error.message);
     }
   }
@@ -59,7 +68,10 @@ class Gateway {
       const data = await this.client.deleteApi({ ApiId: this.apiId });
       return data;
     } catch (error) {
-      console.log("unable to delete or find gateway with an id of: ", this.apiId);
+      console.log(
+        "unable to delete or find gateway with an id of: ",
+        this.apiId
+      );
       throw new Error(error.message);
     }
   }
@@ -78,8 +90,17 @@ class Gateway {
         ProtocolType: gateway.ProtocolType.HTTP,
         CorsConfiguration: {
           AllowOrigins: ALL,
+          AllowHeaders: ["content-type"],
+          AllowMethods: [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE",
+            "HEAD",
+            "OPTIONS",
+          ],
         },
-
       });
       this.url = api.ApiEndpoint; // TODO: might delete
       this.apiId = api.ApiId;
@@ -97,19 +118,23 @@ class Gateway {
    * @type options the updated configuration options
    * @returns */
   static async update(apiId, options) {
-    let api = this.find(apiId)
-    if (!api) return console.log("gateway not found")
+    let api = this.find(apiId);
+    if (!api) return console.log("gateway not found");
     try {
-      let data = await api.client.updateApi({ ...api, ...options, ApiId: apiId })
-      let keys = Object.keys(api)
-      keys.forEach(key => {
-        let res = data[key]
+      let data = await api.client.updateApi({
+        ...api,
+        ...options,
+        ApiId: apiId,
+      });
+      let keys = Object.keys(api);
+      keys.forEach((key) => {
+        let res = data[key];
         if (res) {
-          api[key] = res
+          api[key] = res;
         }
       });
     } catch (error) {
-      console.log("unable to update the api. Error:", error)
+      console.log("unable to update the api. Error:", error);
     }
   }
 
@@ -120,19 +145,27 @@ class Gateway {
    * */
   async createStage(StageName) {
     try {
-      const stage = await this.client.createStage({ ApiId: this.apiId, StageName })
+      const stage = await this.client.createStage({
+        ApiId: this.apiId,
+        StageName,
+      });
       // console.log("stage data: ", stage)
-      this.#stages.push(stage)
-      return stage
+      this.#stages.push(stage);
+      return stage;
     } catch (error) {
-      console.log(`unable to create stage: ${StageName}`)
-      throw new Error(error.message)
+      console.log(`unable to create stage: ${StageName}`);
+      throw new Error(error.message);
     }
   }
 
+  #integrations = {};
+
   async #createIntegration(functionName) {
+    if (this.#integrations[functionName])
+      return this.#integrations[functionName];
+
     const lambdaRegion = "us-east-1";
-    const functionARN = `arn:aws:lambda:${lambdaRegion}:444510759772:function:${functionName}`
+    const functionARN = `arn:aws:lambda:${lambdaRegion}:444510759772:function:${functionName}`;
     let integration;
     try {
       integration = await this.client.createIntegration({
@@ -145,9 +178,14 @@ class Gateway {
       // console.log(" the integration: ", integration);
       // await this.#attachIntegration(route, functionName);
       // await this.#createIntegrationResponse(integration, path, route, functionName);
+      this.#integrations[functionName] = integration;
       return integration;
     } catch (error) {
-      console.log("The integration for function: " + functionName + " could not be completed.");
+      console.log(
+        "The integration for function: " +
+          functionName +
+          " could not be completed."
+      );
       throw new Error(error.message);
     }
   }
@@ -162,28 +200,44 @@ class Gateway {
     let route;
     console.log("this is the api id:", this.apiId);
     let integration = await this.#createIntegration(functionName);
+
+
     try {
-      route = await this.client.createRoute({
-        ApiId: this.apiId,
-        AuthorizationType: AuthorizationType.NONE,
-        RouteKey: method + " /" + path,
-        Target: `integrations/${integration.IntegrationId}`,
-      });
-      this.#routes.push(route);
-      // await this.#createRouteResponse(method, path, route, functionName);
-      return route;
-    } catch (error) {
-      console.log(`The route ${path}, for function ${functionName} could not be created.`);
-      throw new Error(error.message);
-    }
+        if (method === "OPTIONS") {
+          route = await this.client.createRoute({
+            ApiId: this.apiId,
+            AuthorizationType: AuthorizationType.NONE,
+            RouteKey: method + " /" + path
+          });
+        } else {
+          route = await this.client.createRoute({
+            ApiId: this.apiId,
+            AuthorizationType: AuthorizationType.NONE,
+            RouteKey: method + " /" + path,
+            Target: `integrations/${integration.IntegrationId}`,
+          });
+          // await this.#createRouteResponse(method, path, route, functionName);
+        }
+      } catch (error) {
+        console.log(
+          `The route ${path}, for function ${functionName} could not be created.`
+        );
+        throw new Error(error.message);
+      }
+    this.#routes.push(route);
+    return route;
+  }
+
+  async addOptions() {
+
   }
 
   async deleteRoute(RouteKey, ApiId) {
     let data;
     try {
-      const RouteId = this.#routes.find(r => r.RouteKey === RouteKey)?.id;
+      const RouteId = this.#routes.find((r) => r.RouteKey === RouteKey)?.id;
       data = await this.client.deleteRoute({ ApiId, RouteId });
-      this.#routes = this.#routes.filter(route => route.RouteKey !== RouteId);
+      this.#routes = this.#routes.filter((route) => route.RouteKey !== RouteId);
       return data;
     } catch (error) {
       console.log(`unable to remove route: ${RouteId}`);
@@ -192,7 +246,7 @@ class Gateway {
   }
 
   static find(apiId) {
-    return this.all.find(gw => gw.apiId === apiId);
+    return this.all.find((gw) => gw.apiId === apiId);
   }
 }
 

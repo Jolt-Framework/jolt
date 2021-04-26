@@ -62,7 +62,22 @@ class CORE {
       await lambda.create(lambdaRole);
 
       // **TODO**: should be able to configure the method for each lambda
-      await api.addRoute("ANY", funcName, this.toFileName(funcName, ""));
+      const methods = [
+        "OPTIONS",
+        "GET",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "POST",
+        "HEAD",
+      ];
+
+      // await methods.forEach(async method => {
+      //   await api.addRoute(method, funcName, this.toFileName(funcName, "" ))
+      // })
+      for (const method of methods) {
+        await api.addRoute(method, funcName, this.toFileName(funcName, ""));
+      }
     });
 
     await api.createStage(gatewayStage);
@@ -90,18 +105,16 @@ class CORE {
       let request = event.Records[0].cf.request;
       let path = request.uri.split("/").slice(2).join("/");
       let url = "${apiUrl}/" + path;
-      
-      console.log("the event", event);
-      
+
       callback(null, {
         status: '307',
-          statusDescription: 'Temporary Redirect',
-          headers: {
-              location: [{
-                  key: 'Location',
-                  value: url,
-              }],
-          },
+        statusDescription: 'Temporary Redirect',
+        headers: {
+            location: [{
+                key: 'Location',
+                value: url,
+            }],
+        },
       });
     };`;
   }
