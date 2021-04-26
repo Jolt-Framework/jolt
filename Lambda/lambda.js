@@ -82,8 +82,8 @@ class Lambda /*extends something?*/ {
       this.version = func.Version;
       return Promise.resolve(true);
     } catch (error) {
-      console.log(err);
-      throw new Error(err.message);
+      console.log(error);
+      throw new Error(error.message);
     }
   }
 
