@@ -24,35 +24,38 @@ const run = async () => {
     // console.log(error.message);
     throw new Error(error.message);
   }
-
+  let torn = false
+  deployment.deployed = false;
   try {
     const ref = "CORE-Jamstack:" + uuid.v4();
     const bucket = new S3(bucketName);
     await bucket.createBucket();
     deployment.region = region
     deployment.bucket = bucketName
-    // await CORE.deployStaticAssets(bucket, deployment);
     const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket, deployment);
-    // const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl, deployment);
-    // throw new Error("removing all functions and api gateway");
-    // throw new Error("just coz i want to")
-    // const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, ref, deployment);
-    // deployment.cloudfrontId = distribution.Id
-    // const { DomainName: domainName } = distribution;
-    // console.log("Successfully deployed application find it here:\n", domainName);
-
+    await CORE.deployStaticAssets(bucket, deployment);
+    const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl, deployment);
+    const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, ref, deployment);
+    deployment.cloudfrontId = distribution.Id
+    const { DomainName: domainName } = distribution;
+    deployment.domainName = domainName
+    console.log("Successfully deployed application find it here:\n", domainName);
+    deployment.deployed = true;
   } catch (error) {
     console.log("unable to complete distribution, process failed because: ", error.message);
     console.log("initiating teardown... ");
     // deployment.lambdas = undefined;
-    let teardown = new Teardown(deployment)
-    await teardown.all()
-    console.log("teardown completed.")
+    let teardown = new Teardown(deployment);
+    await teardown.all();
+    torn = true;
+    console.log("teardown completed.");
   }
   // dynamo.add(appName, deployment)
-  console.log("the deployment: ", deployment)
-  // let teardown = new Teardown(deployment)
-  // await teardown.all();
+  if (!torn && !deployment.deployed) {
+    let teardown = new Teardown(deployment)
+    await teardown.all();
+  }
+  console.log("the deployment: ", deployment);
   
   // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist
 };

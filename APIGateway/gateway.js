@@ -33,7 +33,7 @@ class Gateway {
    * @param {string} apiName
    */
   constructor(apiName) {
-    this.client = new gateway.ApiGatewayV2({ REGION: "us-east-1" });
+    this.client = new gateway.ApiGatewayV2({ region: "us-east-1" });
     this.apiName = apiName;
     Gateway.all.push(this);
   }

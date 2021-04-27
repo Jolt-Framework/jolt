@@ -24,8 +24,8 @@ class Teardown {
 
   async waitForDistribution(time = 0) {
     try {
-      if (this.lambdas) await Lambda.teardown(this.lambdas);
       if (this.api) await this.api.deleteApi();
+      if (this.lambdas) await Lambda.teardown(this.lambdas);
       if (this.bucket) await S3.teardown(this.bucket);
     } catch (error) {
       newTime = time + 120000
