@@ -4,6 +4,7 @@ const CORE = require("./core");
 const Builder = require("../Utilities/builder");
 const uuid = require("uuid");
 const Teardown = require('../Teardown/teardown')
+// const Dynamo = require('../Dynamo/dynamo');
 const { bucket: bucketName, buildCommand, region} = config.deploy;
 const deployment = {
   lambdas: [],
@@ -34,7 +35,9 @@ const run = async () => {
     deployment.bucket = bucketName
     const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket, deployment);
     await CORE.deployStaticAssets(bucket, deployment);
+    throw new Error("for max")
     const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl, deployment);
+    
     const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, ref, deployment);
     deployment.cloudfrontId = distribution.Id
     const { DomainName: domainName } = distribution;
@@ -55,6 +58,9 @@ const run = async () => {
     let teardown = new Teardown(deployment)
     await teardown.all();
   }
+
+
+
   console.log("the deployment: ", deployment);
   
   // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist
