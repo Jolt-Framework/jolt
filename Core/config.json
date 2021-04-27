@@ -1,7 +1,8 @@
 {
   "deploy": {
     "buildCommand": "cd Demo && npm i && npm run build",
-    "bucket": "new-bucket-etwesfchdy"
+    "bucket": "new-bucket-etwesfchdyx",
+    "region": "us-east-1"
   },
   "core": {
     "functionsFolder": "functions",

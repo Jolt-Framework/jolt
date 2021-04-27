@@ -22,7 +22,7 @@ class CORE {
    *   @param {S3Object} bucket the bucket client created by new S3
    *   @returns {Promise<{gatewayUrl}>} return an object with the gatewayURl inside.
    */
-  static async deployLambdasAndGateway(bucket) {
+  static async deployLambdasAndGateway(bucket, deployment) {
     const {
       region,
       functionsFolder,
@@ -32,13 +32,12 @@ class CORE {
     } = config.core; // will later need a relative path to the functions folder along with the name.
     const api = new Gateway(apiName);
     await api.create(apiName);
-
+    deployment.api = api
     const iam = new Iam();
     const lambdaRole = await iam.createLambdaRole();
 
     await walkDirs(functionsFolder, async (path) => {
       const funcName = this.toFuncName(path);
-
       await zipFunction(path, "archives");
 
       let zippedFileBuffer = fs.readFileSync(
@@ -59,8 +58,9 @@ class CORE {
         this.toFileName(funcName, ".zip")
       );
 
-      await lambda.create(lambdaRole);
-
+      let arn = await lambda.create(lambdaRole);
+      
+      deployment.lambdas.push(arn)
       // **TODO**: should be able to configure the method for each lambda
       const methods = [
         "OPTIONS",
@@ -72,14 +72,10 @@ class CORE {
         "HEAD",
       ];
 
-      // await methods.forEach(async method => {
-      //   await api.addRoute(method, funcName, this.toFileName(funcName, "" ))
-      // })
       for (const method of methods) {
         await api.addRoute(method, funcName, this.toFileName(funcName, ""));
       }
     });
-
     await api.createStage(gatewayStage);
     await api.deploy(gatewayStage, gatewayDescription);
     this.api = api;
@@ -124,27 +120,31 @@ class CORE {
    *   @param {string} apiUrl the gateway api url that will be used to deploy the edge lambda.
    *   @returns {Promise<{gatewayUrl}>} return an object with the gatewayURl inside.
    */
-  static async deployEdgeLambda(bucket, apiUrl) {
+  static async deployEdgeLambda(bucket, apiUrl, deployment) {
     const zipper = new Zip();
     const func = this.createProxy(apiUrl);
     const name = uuid.v4();
 
-    zipper.addFile(`edge-proxy-${name}.js`, Buffer.alloc(func.length, func));
+    zipper.addFile(`edge-proxy.js`, Buffer.alloc(func.length, func));
 
     const proxy = zipper.toBuffer();
 
-    await bucket.uploadObject(proxy, `edge-proxy-${name}.zip`);
+    await bucket.uploadObject(proxy, `edge-proxy.zip`);
     const iam = new Iam();
     const edgeArn = await iam.createEdgeRole("therole");
-
-    const edgelambda = new Lambda(bucket.bucketName, `edge-proxy-${name}.zip`);
-    await edgelambda.create(edgeArn);
-    await edgelambda.deployVersion();
+    const edgelambda = new Lambda(bucket.bucketName, `edge-proxy.zip`);
+    let proxyArn = await edgelambda.create(edgeArn);
+    console.log("proxy arn: ", proxyArn)
+    console.log("is versioned? ", edgelambda.versioned)
+    if (!edgelambda.versioned) {
+      await edgelambda.deployVersion();
+      console.log("reached versioning");
+      proxyArn = `${edgelambda.arn}:${edgelambda.version}`
+    }
+    deployment.lambdas.push(proxyArn)
     // console.log(edgelambda.arn + ":" + edgelambda.version); // debugging step
 
-    return Promise.resolve({
-      proxyArn: `${edgelambda.arn}:${edgelambda.version}`,
-    });
+    return Promise.resolve({ proxyArn });
   }
 
   /**

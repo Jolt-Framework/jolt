@@ -3,7 +3,8 @@ const {
   CreateFunctionCommand,
   AddPermissionCommand,
   DeleteFunctionCommand,
-  PublishVersionCommand
+  PublishVersionCommand,
+  UpdateFunctionCodeCommand
 } = require("@aws-sdk/client-lambda");
 const path = require('path');
 
@@ -61,14 +62,32 @@ class Lambda /*extends something?*/ {
       Role: role,
       Runtime: "nodejs12.x",
     };
-
+    let result;
     try {
-      const result = await Lambda.Client.send(new CreateFunctionCommand(lambdaParams));
+      result = await Lambda.Client.send(new CreateFunctionCommand(lambdaParams));
       this.arn = result.FunctionArn;
       await this.setPermissions();
       return Promise.resolve(result.FunctionArn);
-    } catch(err) {
-      console.log("An error occurred:\n", err);
+    } catch (err) {
+      try {
+        console.log(err.message);
+        console.log("attempting  update tothe existing function...")
+        let params = {
+          Publish: true,
+          S3Bucket: this.S3Bucket,
+          S3Key: this.S3Key,
+          FunctionName
+        }
+        result = await Lambda.Client.send(new UpdateFunctionCodeCommand(params))
+        console.log("updated function: \n", result.FunctionName)
+        this.versioned = true;
+        console.log("this is the version", result.Version)
+        this.version = result.Version
+        this.arn = result.FunctionArn
+        return Promise.resolve(result.FunctionArn)
+      } catch (error) {
+        console.log("unable to update the function's code, \n", error.message)
+      }
     }
   }
 
@@ -119,7 +138,8 @@ class Lambda /*extends something?*/ {
       await Lambda.Client.send(new DeleteFunctionCommand(params));
       console.log("Successfully deleted the lambda:", arn);
     } catch (error) {
-      console.log("Error deleting the lambda: ", error);
+      // console.log("Error deleting the lambda: ", error.message);
+      throw new Error(error.message)
     }
   }
 
@@ -127,10 +147,16 @@ class Lambda /*extends something?*/ {
    * Teardown all Lambdas when project is deleted
    * @param {array}
   */
-  static teardown(lambdaList) {
-    lambdaList.forEach((lambda) => {
-      Lambda.#delete(lambda)
-    })
+  static async teardown(lambdaList) {
+    for (let index = 0; index < lambdaList.length; index++) {
+      const arn = lambdaList[index];
+      console.log("deleting, ", arn)
+      await Lambda.#delete(arn);
+    }
+    // lambdaList.forEach((lambda) => { // this refers to an arn
+    //   console.log("deleting ",lambda)
+    //   Lambda.#delete(lambda)
+    // })
   }
 }
 

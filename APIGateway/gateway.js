@@ -66,7 +66,8 @@ class Gateway {
   async deleteApi() {
     try {
       const data = await this.client.deleteApi({ ApiId: this.apiId });
-      return data;
+      console.log("api deleted");
+      return Promise.resolve(data);
     } catch (error) {
       console.log(
         "unable to delete or find gateway with an id of: ",
@@ -198,7 +199,6 @@ class Gateway {
    */
   async addRoute(method, path, functionName) {
     let route;
-    console.log("this is the api id:", this.apiId);
     let integration = await this.#createIntegration(functionName);
 
 

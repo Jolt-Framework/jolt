@@ -12,7 +12,10 @@ const fs = require("fs");
 const Mime = require('mime-types');
 
 class S3 {
-  static Client = new S3Client({ region: process.env.REGION || "us-east-1" });
+  static Client = new S3Client({
+    region: process.env.REGION || "us-east-1",
+
+  });
 
   constructor(bucketName) {
     this.bucketName = bucketName;
@@ -38,7 +41,7 @@ class S3 {
         await S3.Client.send(new CreateBucketCommand(bucketParams));
         console.log(`Successfully created the bucket:${this.bucketName}`);
       } catch (err) {
-        console.log("Error creating bucket: ", err);
+        throw new Error(`someone else has that bucket name or it's not accessible to you, error: ${err.message}`);
       }
     } else {
       console.log("Bucket already exists.");
@@ -79,7 +82,7 @@ class S3 {
       await this.Client.send(new DeleteBucketCommand(bucketParams))
       console.log("Bucket deleted");
     } catch(err) {
-      console.log("Deleting bucket failed with:\n", err);
+      console.log("Deleting bucket failed with:\n", err.message);
     }
   }
 

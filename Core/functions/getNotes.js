@@ -5,7 +5,7 @@ exports.handler =  async (_event, _context, callback) => {
   const client = new faunadb.Client({
     secret: "fnAEF427OEACACbf49t6UGoWeJ54LKYxzE8P--I0",
   });
-
+  console.log("test");
   try {
     const response = await client.query(
       q.Paginate(q.Documents(q.Collection('notes'))),
