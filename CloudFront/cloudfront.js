@@ -77,9 +77,8 @@ class CloudFrontWrapper {
     console.log("the dist config", DistributionConfig);
     if (!DistributionConfig.Enabled) return distribution;
     DistributionConfig.CacheBehaviors.LambdaFunctionAssociations = {
-      Quantity: "0",
-      Items: []
-    }
+      Quantity: "0"
+    };
     const params = {
       Id: id,
       IfMatch: ETag,

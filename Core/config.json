@@ -1,6 +1,8 @@
 {
   "projectName": "testApp",
   "tableName": "CoreJamstackProjects",
+  "cloudfrontId": "E3HET5K9L3LIUI",
+  "gatewayUrl": "https://lm3a7pkvq2.execute-api.us-east-1.amazonaws.com",
   "deploy": {
     "buildCommand": "cd Demo && npm i && npm run build",
     "bucket": "new-bucket-etwesfchdyx",

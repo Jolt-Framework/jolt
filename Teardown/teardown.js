@@ -11,16 +11,16 @@ class Teardown {
     this.lambdas = lambdas;
     this.edgeLambdas = edgeLambdas;
     this.deployed = deployed
-    this.api = Object.assign(new Gateway(api.apiName), api);
+    if(api) this.api = Object.assign(new Gateway(api.apiName), api);
     this.cloudfrontId = cloudfrontId;
   }
 
   async all() {
     if (this.deployed) {
-      this.handleEdgeLambda()
       let client = await new CloudFrontWrapper(this.region)
       const res = await client.disableDistribution(this.cloudfrontId)
       const confirmation = await client.deleteDistribution(this.cloudfrontId, () => {
+        this.handleEdgeLambda()
       });
       this.waitForDistribution()
     } else {

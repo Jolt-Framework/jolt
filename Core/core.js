@@ -22,6 +22,37 @@ class CORE {
    *   @param {S3Object} bucket the bucket client created by new S3
    *   @returns {Promise<{gatewayUrl}>} return an object with the gatewayURl inside.
    */
+  
+  static async updateLambdas(bucket, deployment) {
+    const {
+      functionsFolder
+    } = config.core;
+
+    const iam = new Iam();
+    const lambdaRole = await iam.createLambdaRole();
+
+    await walkDirs(functionsFolder, async (path) => {
+      const funcName = this.toFuncName(path);
+      await zipFunction(path, "archives");
+
+      let zippedFileBuffer = fs.readFileSync(
+        path.replace("functions", "archives").replace(".js", ".zip")
+      );
+
+      await bucket.uploadObject(
+        zippedFileBuffer,
+        this.toFileName(funcName, ".zip")
+      );
+      const lambda = new Lambda(
+        bucket.bucketName,
+        this.toFileName(funcName, ".zip")
+      );
+
+      let arn = await lambda.create(lambdaRole);
+      
+      deployment.lambdas.push(arn)
+    }) 
+  }
   static async deployLambdasAndGateway(bucket, deployment) {
     const {
       region,
@@ -165,6 +196,32 @@ class CORE {
       callerReference
     );
     return Promise.resolve({ distribution });
+  }
+  static async invalidateDistribution(distributionId, proxyARN) {
+    const { region } = config.core;
+    let cf = new CloudFrontWrapper(region)
+    const { Etag, DistributionConfig } = await cf.getDistribution(distributionId)
+    DistributionConfig.CacheBehaviors.LambdaFunctionAssociations = {
+      Quantity: "1",
+      Items: [
+        {
+          EventType: "viewer-request",//types.EventTypeViewerRequest
+          LambdaFunctionARN: proxyARN,
+          IncludeBody: true,
+        },
+      ],      
+    }
+    
+    let { Distribution: distribution } = await cf.client.updateDistribution({
+      Id: distributionId,
+      ifMatch: Etag,
+      DistributionConfig
+    })
+    let confirmation = await cf.client.createInvalidation({
+      DistributionId: distributionId,
+    })
+
+    return Promise.resolve({...confirmation, ...distribution});
   }
 
   static async updateCors(domainName) {
