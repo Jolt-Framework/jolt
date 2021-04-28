@@ -4,10 +4,15 @@ const CORE = require("./core");
 const Builder = require("../Utilities/builder");
 const uuid = require("uuid");
 const Teardown = require('../Teardown/teardown')
-// const Dynamo = require('../Dynamo/dynamo');
-const { bucket: bucketName, buildCommand, region} = config.deploy;
-const deployment = {
+const Dynamo = require('../Dynamo/dynamo');
+const Gateway = require("../APIGateway/gateway");
+const { bucket: bucketName, buildCommand, region } = config.deploy;
+const { tableName, projectName } = config;
+let deployment = {
+  tableName,
+  projectName,
   lambdas: [],
+  edgeLambdas: []
 };
 const run = async () => {
   try {
@@ -25,8 +30,11 @@ const run = async () => {
     // console.log(error.message);
     throw new Error(error.message);
   }
+
+
   let torn = false
   deployment.deployed = false;
+  let db = new Dynamo();
   try {
     const ref = "CORE-Jamstack:" + uuid.v4();
     const bucket = new S3(bucketName);
@@ -35,7 +43,6 @@ const run = async () => {
     deployment.bucket = bucketName
     const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket, deployment);
     await CORE.deployStaticAssets(bucket, deployment);
-    throw new Error("for max")
     const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl, deployment);
     
     const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, ref, deployment);
@@ -45,22 +52,23 @@ const run = async () => {
     console.log("Successfully deployed application find it here:\n", domainName);
     deployment.deployed = true;
   } catch (error) {
+
     console.log("unable to complete distribution, process failed because: ", error.message);
     console.log("initiating teardown... ");
-    // deployment.lambdas = undefined;
     let teardown = new Teardown(deployment);
     await teardown.all();
     torn = true;
     console.log("teardown completed.");
   }
-  // dynamo.add(appName, deployment)
+
   if (!torn && !deployment.deployed) {
     let teardown = new Teardown(deployment)
     await teardown.all();
+  } else if (deployment.deployed) {
+    await db.createTable(deployment.tableName)
+    await db.addItemsToTable(deployment.tableName, deployment)
   }
-
-
-
+  
   console.log("the deployment: ", deployment);
   
   // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist

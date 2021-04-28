@@ -1,40 +1,42 @@
 const Dynamo = require("../Dynamo/dynamo");
+const Teardown = require("../Teardown/teardown");
+const { projectName, tableName } = require('./config.json')
+
 const run = async () => {
-  try {
-    const uuidv4 = require("uuid").v4()
-    const db = new Dynamo()
-    const tableName = "CoreJamstack1"
-    // console.log('creating dynamo table');
-    // const table = await db.createTable(tableName);
-    // console.log('adding items');
-    // const items = await db.getItems(tableName, "testApp2", "new-bucket-etwesfchdyx1");
-    const items = await db.addItems(tableName, {
-      lambdas: [
-        'arn:aws:lambda:us-east-1:886346126803:function:createNote:14',
-        'arn:aws:lambda:us-east-1:886346126803:function:deleteNote:14',
-        'arn:aws:lambda:us-east-1:886346126803:function:getNotes:14',
-        'arn:aws:lambda:us-east-1:886346126803:function:updateNote:14',
-        'arn:aws:lambda:us-east-1:886346126803:function:edge-proxy:10'
-      ],
-      deployed: true,
-      region: 'us-east-1',
-      projectName: "testApp1",
-      bucketName: 'new-bucket-etwesfchdyx1',
-      api: {
-        apiName: 'testName',
-        url: 'https://7yki6ogr7j.execute-api.us-east-1.amazonaws.com',
-        // apiId: '7yki6ogr7j'
-        apiId: '8yki6ogr7j'
-      },
-      cloudfrontId: 'E1DI8SOZHQDW1',
-      domainName: 'd3lud355m027lp.cloudfront.net'
-    })
-    
-    // console.log("table: ", table);
-    console.log("items: ", items);
-  } catch (error) {
-    console.log(error.message);
-  }
+  let dynamo = new Dynamo()
+  await dynamo.deleteItems(tableName, async ({ config }) => {
+    let teardown = new Teardown(config)
+    await teardown.all()
+  })
 }
 
+// const teardown = async () => {
+//   const json = {
+//     "tableName": "CoreJamstackProjects",
+//     "lambdas": ["arn:aws:lambda:us-east-1:886346126803:function:createNote:15", "arn:aws:lambda:us-east-1:886346126803:function:deleteNote:15", "arn:aws:lambda:us-east-1:886346126803:function:getNotes:15", "arn:aws:lambda:us-east-1:886346126803:function:updateNote:15"],
+//     "edgeLambdas": ["arn:aws:lambda:us-east-1:886346126803:function:edge-proxy:15"],
+//     "deployed": true,
+//     "region": "us-east-1",
+//     "api": {
+//       "client": {
+//         "middlewareStack": {}, "config": { 
+//             "apiVersion": "2018-11-29", 
+//             "disableHostPrefix": false,
+//             "logger": { }, 
+//             "serviceId": "ApiGatewayV2",
+//             "runtime": "node",
+//          "requestHandler": { "metadata": { "handlerProtocol": "http/1.1" }, "httpAgent": { "_events": { }, "_eventsCount": 2, "defaultPort": 80, "protocol": "http:", "options": { "keepAlive": true, "maxSockets": 50, "path": null }, "requests": { }, "sockets": { }, "freeSockets": { }, "keepAliveMsecs": 1000, "keepAlive": true, "maxSockets": 50, "maxFreeSockets": 256, "scheduling": "lifo", "maxTotalSockets": null, "totalSocketCount": 0 }, "httpsAgent": { "_events": { }, "_eventsCount": 2, "defaultPort": 443, "protocol": "https:", "options": { "keepAlive": true, "maxSockets": 50, "path": null }, "requests": { }, "sockets": { }, "freeSockets": { "apigateway.us-east-1.amazonaws.com:443:::::::::::::::::::::": [{ "_tlsOptions": { "pipe": false, "secureContext": { "context": {} }, "isServer": false, "requestCert": true, "rejectUnauthorized": true }, "_secureEstablished": true, "_securePending": false, "_newSessionPending": false, "_controlReleased": true, "secureConnecting": false, "_SNICallback": null, "servername": "apigateway.us-east-1.amazonaws.com", "alpnProtocol": false, "authorized": true, "authorizationError": null, "encrypted": true, "_events": { "close": [null, null, null] }, "_eventsCount": 9, "connecting": false, "_hadError": false, "_parent": null, "_host": "apigateway.us-east-1.amazonaws.com", "_readableState": { "objectMode": false, "highWaterMark": 16384, "buffer": { "head": null, "tail": null, "length": 0 }, "length": 0, "pipes": [], "flowing": true, "ended": false, "endEmitted": false, "reading": true, "constructed": true, "sync": false, "needReadable": true, "emittedReadable": false, "readableListening": false, "resumeScheduled": false, "errorEmitted": false, "emitClose": false, "autoDestroy": true, "destroyed": false, "errored": null, "closed": false, "closeEmitted": false, "defaultEncoding": "utf8", "awaitDrainWriters": null, "multiAwaitDrain": false, "readingMore": false, "decoder": null, "encoding": null }, "_writableState": { "objectMode": false, "highWaterMark": 16384, "finalCalled": false, "needDrain": false, "ending": false, "ended": false, "finished": false, "destroyed": false, "decodeStrings": false, "defaultEncoding": "utf8", "length": 0, "writing": false, "corked": 0, "sync": false, "bufferProcessing": false, "writecb": null, "writelen": 0, "afterWriteTickInfo": null, "buffered": [], "bufferedIndex": 0, "allBuffers": true, "allNoop": true, "pendingcb": 0, "constructed": true, "prefinished": false, "errorEmitted": false, "emitClose": false, "autoDestroy": true, "errored": null, "closed": false, "closeEmitted": false }, "allowHalfOpen": false, "_sockname": null, "_pendingData": null, "_pendingEncoding": "", "_server": null, "ssl": { "_parent": { "reading": true, "onconnection": null }, "_secureContext": { "context": {} }, "reading": true }, "_requestCert": true, "_rejectUnauthorized": true, "parser": null, "_httpMessage": null, "timeout": 0 }] }, "keepAliveMsecs": 1000, "keepAlive": true, "maxSockets": 50, "maxFreeSockets": 256, "scheduling": "lifo", "maxTotalSockets": null, "totalSocketCount": 0, "maxCachedSessions": 100, "_sessionCache": { "map": { "apigateway.us-east-1.amazonaws.com:443:::::::::::::::::::::": { "type": "Buffer", "data": [48, 130, 6, 215, 2, 1, 1, 2, 2, 3, 3, 4, 2, 192, 47, 4, 32, 52, 243, 214, 204, 163, 59, 11, 155, 96, 36, 182, 81, 245, 149, 187, 68, 193, 20, 92, 142, 179, 159, 182, 138, 66, 63, 186, 71, 33, 230, 132, 240, 4, 48, 54, 236, 194, 92, 109, 85, 180, 246, 170, 175, 44, 243, 217, 122, 196, 16, 33, 233, 53, 153, 219, 173, 131, 205, 75, 86, 224, 87, 63, 51, 148, 154, 220, 17, 37, 112, 181, 54, 77, 174, 114, 194, 174, 187, 162, 14, 217, 54, 161, 6, 2, 4, 96, 136, 188, 192, 162, 4, 2, 2, 28, 32, 163, 130, 5, 133, 48, 130, 5, 129, 48, 130, 4, 105, 160, 3, 2, 1, 2, 2, 16, 6, 6, 54, 210, 128, 160, 190, 140, 184, 80, 191, 116, 235, 137, 210, 190, 48, 13, 6, 9, 42, 134, 72, 134, 247, 13, 1, 1, 11, 5, 0, 48, 70, 49, 11, 48, 9, 6, 3, 85, 4, 6, 19, 2, 85, 83, 49, 15, 48, 13, 6, 3, 85, 4, 10, 19, 6, 65, 109, 97, 122, 111, 110, 49, 21, 48, 19, 6, 3, 85, 4, 11, 19, 12, 83, 101, 114, 118, 101, 114, 32, 67, 65, 32, 49, 66, 49, 15, 48, 13, 6, 3, 85, 4, 3, 19, 6, 65, 109, 97, 122, 111, 110, 48, 30, 23, 13, 50, 49, 48, 50, 48, 52, 48, 48, 48, 48, 48, 48, 90, 23, 13, 50, 50, 48, 51, 48, 53, 50, 51, 53, 57, 53, 57, 90, 48, 45, 49, 43, 48, 41, 6, 3, 85, 4, 3, 19, 34, 97, 112, 105, 103, 97, 116, 101, 119, 97, 121, 46, 117, 115, 45, 101, 97, 115, 116, 45, 49, 46, 97, 109, 97, 122, 111, 110, 97, 119, 115, 46, 99, 111, 109, 48, 130, 1, 34, 48, 13, 6, 9, 42, 134, 72, 134, 247, 13, 1, 1, 1, 5, 0, 3, 130, 1, 15, 0, 48, 130, 1, 10, 2, 130, 1, 1, 0, 186, 170, 132, 84, 209, 150, 54, 91, 116, 92, 17, 115, 8, 37, 56, 251, 56, 62, 101, 178, 156, 118, 5, 18, 31, 29, 116, 243, 194, 129, 2, 34, 77, 181, 135, 203, 204, 210, 141, 142, 178, 206, 122, 78, 78, 168, 249, 226, 176, 241, 145, 1, 138, 63, 255, 68, 31, 160, 35, 87, 231, 100, 113, 174, 55, 104, 86, 72, 145, 60, 197, 32, 214, 235, 4, 206, 116, 7, 228, 37, 167, 161, 125, 229, 131, 96, 155, 254, 41, 198, 119, 67, 64, 105, 155, 115, 20, 199, 95, 161, 61, 132, 233, 123, 161, 88, 98, 21, 224, 6, 146, 66, 13, 158, 9, 224, 33, 235, 121, 185, 13, 33, 116, 176, 70, 113, 133, 47, 36, 211, 216, 60, 109, 43, 127, 157, 41, 152, 28, 102, 221, 231, 67, 71, 228, 229, 180, 47, 10, 250, 19, 74, 141, 60, 239, 8, 68, 164, 78, 35, 174, 100, 102, 126, 166, 58, 161, 135, 130, 207, 80, 115, 141, 198, 194, 127, 185, 133, 33, 245, 168, 158, 159, 28, 108, 59, 237, 254, 194, 235, 235, 25, 72, 102, 93, 14, 128, 158, 253, 221, 210, 49, 13, 56, 23, 13, 128, 23, 14, 88, 38, 176, 67, 143, 206, 238, 236, 207, 74, 186, 229, 13, 163, 148, 222, 66, 114, 106, 192, 169, 164, 98, 157, 76, 69, 139, 36, 46, 111, 242, 158, 174, 158, 218, 247, 92, 51, 195, 77, 106, 202, 41, 155, 137, 4, 39, 2, 3, 1, 0, 1, 163, 130, 2, 130, 48, 130, 2, 126, 48, 31, 6, 3, 85, 29, 35, 4, 24, 48, 22, 128, 20, 89, 164, 102, 6, 82, 160, 123, 149, 146, 60, 163, 148, 7, 39, 150, 116, 91, 249, 61, 208, 48, 29, 6, 3, 85, 29, 14, 4, 22, 4, 20, 56, 144, 89, 47, 111, 82, 17, 198, 56, 181, 237, 98, 57, 30, 198, 234, 162, 188, 137, 152, 48, 45, 6, 3, 85, 29, 17, 4, 38, 48, 36, 130, 34, 97, 112, 105, 103, 97, 116, 101, 119, 97, 121, 46, 117, 115, 45, 101, 97, 115, 116, 45, 49, 46, 97, 109, 97, 122, 111, 110, 97, 119, 115, 46, 99, 111, 109, 48, 14, 6, 3, 85, 29, 15, 1, 1, 255, 4, 4, 3, 2, 5, 160, 48, 29, 6, 3, 85, 29, 37, 4, 22, 48, 20, 6, 8, 43, 6, 1, 5, 5, 7, 3, 1, 6, 8, 43, 6, 1, 5, 5, 7, 3, 2, 48, 59, 6, 3, 85, 29, 31, 4, 52, 48, 50, 48, 48, 160, 46, 160, 44, 134, 42, 104, 116, 116, 112, 58, 47, 47, 99, 114, 108, 46, 115, 99, 97, 49, 98, 46, 97, 109, 97, 122, 111, 110, 116, 114, 117, 115, 116, 46, 99, 111, 109, 47, 115, 99, 97, 49, 98, 46, 99, 114, 108, 48, 19, 6, 3, 85, 29, 32, 4, 12, 48, 10, 48, 8, 6, 6, 103, 129, 12, 1, 2, 1, 48, 117, 6, 8, 43, 6, 1, 5, 5, 7, 1, 1, 4, 105, 48, 103, 48, 45, 6, 8, 43, 6, 1, 5, 5, 7, 48, 1, 134, 33, 104, 116, 116, 112, 58, 47, 47, 111, 99, 115, 112, 46, 115, 99, 97, 49, 98, 46, 97, 109, 97, 122, 111, 110, 116, 114, 117, 115, 116, 46, 99, 111, 109, 48, 54, 6, 8, 43, 6, 1, 5, 5, 7, 48, 2, 134, 42, 104, 116, 116, 112, 58, 47, 47, 99, 114, 116, 46, 115, 99, 97, 49, 98, 46, 97, 109, 97, 122, 111, 110, 116, 114, 117, 115, 116, 46, 99, 111, 109, 47, 115, 99, 97, 49, 98, 46, 99, 114, 116, 48, 12, 6, 3, 85, 29, 19, 1, 1, 255, 4, 2, 48, 0, 48, 130, 1, 5, 6, 10, 43, 6, 1, 4, 1, 214, 121, 2, 4, 2, 4, 129, 246, 4, 129, 243, 0, 241, 0, 118, 0, 41, 121, 190, 240, 158, 57, 57, 33, 240, 86, 115, 159, 99, 165, 119, 229, 190, 87, 125, 156, 96, 10, 248, 249, 77, 93, 38, 92, 37, 93, 199, 132, 0, 0, 1, 119, 106, 165, 102, 198, 0, 0, 4, 3, 0, 71, 48, 69, 2, 32, 88, 103, 54, 66, 31, 38, 9, 170, 225, 169, 129, 234, 87, 125, 88, 110, 3, 30, 3, 60, 78, 17, 158, 199, 222, 130, 60, 160, 163, 114, 167, 158, 2, 33, 0, 239, 53, 4, 209, 65, 142, 31, 212, 13, 250, 194, 131, 204, 154, 9, 248, 200, 29, 147, 66, 45, 229, 80, 233, 196, 247, 207, 24, 130, 196, 58, 171, 0, 119, 0, 34, 69, 69, 7, 89, 85, 36, 86, 150, 63, 161, 47, 241, 247, 109, 134, 224, 35, 38, 99, 173, 192, 75, 127, 93, 198, 131, 92, 110, 226, 15, 2, 0, 0, 1, 119, 106, 165, 103, 8, 0, 0, 4, 3, 0, 72, 48, 70, 2, 33, 0, 255, 238, 114, 16, 234, 209, 156, 69, 191, 128, 69, 214, 53, 151, 176, 241, 117, 208, 10, 207, 252, 181, 233, 206, 70, 21, 6, 205, 171, 105, 129, 126, 2, 33, 0, 254, 109, 79, 89, 193, 52, 46, 70, 219, 37, 1, 93, 206, 186, 235, 153, 32, 22, 22, 163, 79, 104, 205, 79, 72, 174, 227, 122, 160, 251, 13, 123, 48, 13, 6, 9, 42, 134, 72, 134, 247, 13, 1, 1, 11, 5, 0, 3, 130, 1, 1, 0, 86, 179, 231, 197, 248, 172, 143, 141, 15, 151, 71, 220, 76, 76, 13, 27, 84, 154, 190, 193, 85, 91, 235, 5, 91, 140, 234, 210, 151, 169, 100, 252, 97, 254, 110, 159, 74, 22, 74, 81, 186, 197, 109, 100, 44, 102, 152, 66, 7, 1, 78, 196, 220, 111, 109, 199, 88, 76, 14, 83, 59, 4, 29, 147, 183, 134, 237, 137, 54, 71, 5, 112, 235, 218, 92, 148, 3, 191, 87, 157, 135, 229, 21, 105, 43, 130, 36, 74, 74, 105, 233, 50, 41, 65, 118, 113, 162, 57, 216, 126, 199, 0, 2, 64, 0, 22, 16, 178, 106, 210, 39, 66, 152, 114, 35, 244, 190, 163, 113, 70, 2, 77, 50, 1, 129, 140, 50, 114, 9, 113, 215, 17, 124, 187, 83, 198, 210, 207, 30, 107, 66, 87, 164, 111, 42, 103, 14, 246, 156, 210, 67, 207, 47, 109, 108, 36, 226, 57, 59, 135, 114, 43, 112, 6, 183, 85, 26, 51, 89, 192, 84, 139, 112, 247, 170, 152, 29, 135, 188, 58, 57, 25, 152, 89, 103, 124, 134, 211, 114, 165, 201, 241, 40, 195, 32, 194, 127, 253, 66, 221, 149, 179, 171, 11, 170, 67, 195, 112, 98, 209, 178, 130, 35, 200, 89, 147, 91, 55, 185, 206, 79, 46, 192, 185, 199, 223, 67, 104, 203, 186, 0, 144, 157, 91, 107, 224, 195, 90, 117, 71, 70, 16, 6, 49, 234, 221, 159, 2, 238, 26, 160, 10, 209, 201, 141, 223, 164, 2, 4, 0, 169, 5, 2, 3, 0, 168, 192, 170, 129, 211, 4, 129, 208, 219, 41, 53, 194, 16, 196, 174, 164, 253, 206, 123, 129, 243, 34, 95, 104, 41, 185, 189, 223, 184, 179, 112, 151, 113, 136, 80, 149, 83, 79, 94, 191, 199, 98, 160, 178, 250, 178, 64, 31, 218, 202, 105, 30, 181, 247, 238, 142, 193, 235, 160, 43, 253, 85, 140, 96, 138, 33, 107, 110, 46, 253, 145, 35, 203, 169, 111, 183, 228, 139, 113, 146, 252, 235, 82, 30, 125, 219, 52, 84, 131, 254, 188, 89, 33, 218, 157, 204, 131, 239, 213, 152, 130, 164, 224, 90, 215, 61, 140, 251, 174, 2, 62, 62, 162, 205, 171, 18, 160, 210, 247, 74, 170, 104, 0, 7, 255, 88, 6, 77, 234, 65, 104, 212, 79, 102, 28, 85, 86, 60, 85, 142, 188, 47, 12, 186, 187, 69, 55, 48, 240, 206, 160, 154, 185, 162, 117, 133, 5, 177, 142, 6, 103, 159, 98, 185, 245, 114, 13, 144, 227, 26, 126, 250, 120, 235, 209, 3, 229, 187, 84, 34, 172, 235, 81, 230, 9, 252, 1, 134, 106, 43, 34, 167, 202, 34, 170, 189, 131, 65, 120, 33, 127, 173, 200, 63, 223, 45, 233, 133, 125, 247, 223, 245, 155, 192, 17, 94] } }, "list": ["apigateway.us-east-1.amazonaws.com:443:::::::::::::::::::::"] } } }, "tls": true, "isCustomEndpoint": false, "retryStrategy": { "mode": "standard", "retryQuota": { } }, "systemClockOffset": 0, "signingEscapePath": true }
+//       },
+//       "apiName": "testName",
+//       "url": "https://1ow0tb3tpc.execute-api.us-east-1.amazonaws.com",
+//       "apiId": "1ow0tb3tpc"
+//     },
+//     "cloudfrontId": "E114SGTQRRKXN1",
+//     "domainName": "dljk3r0i9yw0w.cloudfront.net"
+//   };
+//   let td = new Teardown(json)
+//   await td.all()
+
+// }
+// teardown();
 run()

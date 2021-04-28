@@ -8,6 +8,10 @@ class CloudFrontWrapper {
     this.client = new AWS.CloudFront({ region });
   }
 
+  async removeEdgeLambdas() {
+    
+  }
+
   async createDistribution(bucketDomainName, bucketName, proxyARN, reference) {
     this.enabled = true;
     const params = {
@@ -29,6 +33,7 @@ class CloudFrontWrapper {
     }
   }
 
+
   async getDistribution(id) {
     try {
       const { ETag, Distribution } = await this.client.getDistribution({ Id: id })
@@ -40,22 +45,25 @@ class CloudFrontWrapper {
     }
   }
 
-  async deleteDistribution(id, time = 0) {
+  async deleteDistribution(id, callback, t) {
+    t ||= 0
     try {
       const { ETag } = await this.getDistribution(id);
+      if (!Etag) return callback();
       try {
         const confirmation = await this.client.deleteDistribution({ Id: id, IfMatch: ETag });
+        await callback()
         console.log("Distribution successfully deleted:\n", confirmation);
       } catch (error) {
-        if (time > 300000) {
+        if (t > 300000) {
           console.log("Too many retries, please wait and try this operation at another time");
           return;
         }
-        const newTime = time + 120000;
-        console.log(`Unable to delete at this time, will try again in ${newTime / 1000} seconds(times out at 5)`);
+        const newTime = Number(t) + 120000;
+        console.log(`Unable to delete at this time, will try again in ${newTime / 1000} seconds(times out after 2 retries)`);
 
         setTimeout(() => {
-          this.deleteDistribution(id, newTime);
+          this.deleteDistribution(id, callback, newTime);
         }, newTime);
       }
     } catch (error) {
@@ -67,9 +75,12 @@ class CloudFrontWrapper {
     this.enabled = false;
     const distribution = await this.getDistribution(id);
     const { ETag, DistributionConfig } = distribution;
-
+    console.log("the dist config", DistributionConfig);
     if (!DistributionConfig.Enabled) return distribution;
-
+    DistributionConfig.CacheBehaviors.LambdaFunctionAssociations = {
+      Quantity: "0",
+      Items: []
+    }
     const params = {
       Id: id,
       IfMatch: ETag,

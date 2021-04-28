@@ -141,7 +141,7 @@ class CORE {
       console.log("reached versioning");
       proxyArn = `${edgelambda.arn}:${edgelambda.version}`
     }
-    deployment.lambdas.push(proxyArn)
+    deployment.edgeLambdas.push(proxyArn)
     // console.log(edgelambda.arn + ":" + edgelambda.version); // debugging step
 
     return Promise.resolve({ proxyArn });

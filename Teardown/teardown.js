@@ -4,32 +4,43 @@ const Lambda = require("../Lambda/lambda");
 const S3 = require("../S3/s3");
 
 class Teardown {
-  constructor({ region, bucket, lambdas, api, cloudfrontId }) {
+  constructor({ region, bucket, lambdas, api, cloudfrontId, edgeLambdas, deployed }) {
     this.region = region
     this.bucket = bucket;
     this.lambdas = lambdas;
+    this.edgeLambdas = edgeLambdas;
+    this.deployed = deployed
     this.api = api;
     this.cloudfrontId = cloudfrontId;
   }
 
   async all() {
-    if (this.cloudfrontId) {
+    if (this.deployed) {
+      this.handleEdgeLambda()
       let client = await new CloudFrontWrapper(this.region)
       const res = await client.disableDistribution(this.cloudfrontId)
-      const confirmation = await client.deleteDistribution(this.cloudfrontId);
+      const confirmation = await client.deleteDistribution(this.cloudfrontId, () => {
+      });
+      this.waitForDistribution()
+    } else {
+      this.handleEdgeLambda();
+      this.waitForDistribution();
     }
-    await this.waitForDistribution()
-
+    
+    
   }
 
-  async waitForDistribution(time = 0) {
+  handleEdgeLambda() {
+    Lambda.teardown(this.edgeLambdas)
+  }
+  waitForDistribution(time=0) {
     try {
-      if (this.api) await this.api.deleteApi();
-      if (this.lambdas) await Lambda.teardown(this.lambdas);
-      if (this.bucket) await S3.teardown(this.bucket);
+      if (this.api) this.api.deleteApi();
+      if (this.lambdas) Lambda.teardown(this.lambdas);
+      if (this.bucket) S3.teardown(this.bucket);
     } catch (error) {
-      newTime = time + 120000
-      if (newTime > 300000) throw new Error("unable to remove all items") 
+      let newTime = time + 120002
+      if (newTime > 120003) throw new Error("unable to remove all items") 
       console.log("the error message", error.message);
       console.log(`will try again in ${newTime / 1000} seconds`)
       setTimeout(() => {

@@ -1,4 +1,6 @@
 {
+  "projectName": "testApp",
+  "tableName": "CoreJamstackProjects",
   "deploy": {
     "buildCommand": "cd Demo && npm i && npm run build",
     "bucket": "new-bucket-etwesfchdyx",

@@ -18,8 +18,8 @@ class IAMWrapper {
    * @param {String} roleName
    * @returns {Promise<String>}
    */
-  async createEdgeRole() {
-    const edgeLambdaRoleName = "LambdaDamnde";
+  async createEdgeRole(edgeLambdaRoleName) {
+    edgeLambdaRoleName ||= "LambdaDamnde";
     let role;
 
     try {
