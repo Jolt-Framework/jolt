@@ -138,8 +138,8 @@ class Lambda /*extends something?*/ {
       await Lambda.Client.send(new DeleteFunctionCommand(params));
       console.log("Successfully deleted the lambda:", arn);
     } catch (error) {
-      // console.log("Error deleting the lambda: ", error.message);
-      throw new Error(error.message)
+      console.log("Error deleting the lambda: ", error.message);
+      if(!error.message.includes("edge-proxy"))throw new Error(error.message)
     }
   }
 

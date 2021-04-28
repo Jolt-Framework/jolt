@@ -37,7 +37,6 @@ class CloudFrontWrapper {
   async getDistribution(id) {
     try {
       const { ETag, Distribution } = await this.client.getDistribution({ Id: id })
-
       return { ETag, DistributionConfig: Distribution.DistributionConfig };
     } catch (error) {
       console.log(`Distribution: ${id} does not exist`);

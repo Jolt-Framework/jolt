@@ -1,4 +1,5 @@
 
+const Gateway = require("../APIGateway/gateway");
 const CloudFrontWrapper = require("../CloudFront/cloudfront");
 const Lambda = require("../Lambda/lambda");
 const S3 = require("../S3/s3");
@@ -10,7 +11,7 @@ class Teardown {
     this.lambdas = lambdas;
     this.edgeLambdas = edgeLambdas;
     this.deployed = deployed
-    this.api = api;
+    this.api = Object.assign(new Gateway(api.apiName), api);
     this.cloudfrontId = cloudfrontId;
   }
 
