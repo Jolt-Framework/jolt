@@ -8,14 +8,9 @@ const Dynamo = require('../Dynamo/dynamo');
 const Gateway = require("../APIGateway/gateway");
 const { bucket: bucketName, buildCommand, region } = config.deploy;
 const { tableName, projectName } = config;
-let deployment = {
-  tableName,
-  projectName,
-  lambdas: [],
-  edgeLambdas: []
-};
-const run = async () => {
-  try {
+
+
+const buildProcess = async () => {
     console.log("Building started");
 
     const builder = new Builder(buildCommand);
@@ -25,53 +20,91 @@ const run = async () => {
     await builder2.build();
     // END REMOVE THIS LATER
     console.log("Build completed!");
-  } catch (error) {
-    console.log("Failed to complete build process");
-    // console.log(error.message);
-    throw new Error(error.message);
-  }
+}
 
+const createDeployment = async (deployment) => {
+  const ref = "CORE-Jamstack:" + uuid.v4();
+  const bucket = new S3(bucketName, deployment);
+  await bucket.createBucket();
+  deployment.region = region
+  deployment.bucket = bucketName
+  CORE.deployment = deployment;
+  await CORE.deployStaticAssets(bucket);
+  throw new Error("bucket check");
+  const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket);
+  const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
 
-  let torn = false
-  deployment.deployed = false;
-  let db = new Dynamo();
-  try {
-    const ref = "CORE-Jamstack:" + uuid.v4();
-    const bucket = new S3(bucketName);
-    await bucket.createBucket();
-    deployment.region = region
-    deployment.bucket = bucketName
-    const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket, deployment);
-    await CORE.deployStaticAssets(bucket, deployment);
-    const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl, deployment);
-    
-    const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, ref, deployment);
-    deployment.cloudfrontId = distribution.Id
-    const { DomainName: domainName } = distribution;
-    deployment.domainName = domainName
-    console.log("Successfully deployed application find it here:\n", domainName);
-    deployment.deployed = true;
-  } catch (error) {
+  const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, ref);
+  deployment.cloudfrontId = distribution.Id
+  const { DomainName: domainName } = distribution;
+  deployment.domainName = domainName
+  console.log("Successfully deployed application find it here:\n", domainName);
+  deployment.deployed = true;
+}
 
-    console.log("unable to complete distribution, process failed because: ", error.message);
-    console.log("initiating teardown... ");
-    let teardown = new Teardown(deployment);
-    await teardown.all();
-    torn = true;
-    console.log("teardown completed.");
-  }
-
-  if (!torn && !deployment.deployed) {
+const sendToDB = async (deployment) => {
+  if (!deployment.deployed) {
     let teardown = new Teardown(deployment)
     await teardown.all();
-  } else if (deployment.deployed) {
-    await db.createTable(deployment.tableName)
-    await db.addItemsToTable(deployment.tableName, deployment)
+    return;
   }
-  
+
+  let db = new Dynamo();
+  await db.createTable(deployment.tableName)
+  await db.addItemsToTable(deployment.tableName, deployment)
+}
+
+
+const run = async (deployment) => {
+  try {
+    await buildProcess()
+  } catch (error) {
+    console.log("Failed to complete build process");
+    throw new Error(error.message);
+  }
+  let torn = false
+  deployment.deployed = false;
+
+  try {
+    await createDeployment(deployment)
+  } catch (error) {
+    await teardown(
+      "unable to complete distribution, process failed because: ",
+      error,
+      deployment
+    );
+
+  }
+  try {
+    if (!torn) await sendToDB(deployment)
+  } catch (error) {
+    await teardown(
+      "unable to send to database, process failed because: ",
+      error,
+      deployment
+    );
+  }
+
   console.log("the deployment: ", deployment);
-  
+
   // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist
 };
 
-run();
+const teardown = async (message, error, deployment) => {
+  console.log(message, error.message);
+  console.log("initiating teardown... ");
+  let teardown = new Teardown(deployment);
+  await teardown.all();
+  torn = true;
+  console.log("teardown completed.");
+}
+const createDeploymentTemplate = () => ({
+  tableName,
+  projectName,
+  files: [],
+  lambdas: [],
+  edgeLambdas: []
+});
+
+
+run(createDeploymentTemplate());

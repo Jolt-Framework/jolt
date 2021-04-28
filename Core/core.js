@@ -10,6 +10,16 @@ const config = require("./config.json");
 const { zipFunction } = require("../Utilities/zip-it-and-ship-it/src/main");
 
 class CORE {
+  static #deployment;
+
+  static get deployment() {
+    return CORE.#deployment;
+  }
+
+  static set deployment(deployment) {
+    CORE.#deployment = deployment;
+  }
+
   static toFuncName(path) {
     return path.split("/").slice(1).join("/").split(".").slice(0, -1).join(".");
   }
@@ -22,11 +32,10 @@ class CORE {
    *   @param {S3Object} bucket the bucket client created by new S3
    *   @returns {Promise<{gatewayUrl}>} return an object with the gatewayURl inside.
    */
-  
-  static async updateLambdas(bucket, deployment) {
-    const {
-      functionsFolder
-    } = config.core;
+
+  static async updateLambdasAndGateway(bucket, api) {
+    const { apiId, apiName } = api;
+    const { functionsFolder, gatewayStage} = config.core;
 
     const iam = new Iam();
     const lambdaRole = await iam.createLambdaRole();
@@ -43,17 +52,22 @@ class CORE {
         zippedFileBuffer,
         this.toFileName(funcName, ".zip")
       );
+
       const lambda = new Lambda(
         bucket.bucketName,
         this.toFileName(funcName, ".zip")
       );
 
       let arn = await lambda.create(lambdaRole);
-      
-      deployment.lambdas.push(arn)
-    }) 
+      CORE.#deployment.lambdas.push(arn);
+    });
+
+    let gateway = new Gateway(apiName, gatewayStage)
+    let res = await gateway.update(apiId);
+    return Promise.resolve(res);
   }
-  static async deployLambdasAndGateway(bucket, deployment) {
+
+  static async deployLambdasAndGateway(bucket) {
     const {
       region,
       functionsFolder,
@@ -63,7 +77,7 @@ class CORE {
     } = config.core; // will later need a relative path to the functions folder along with the name.
     const api = new Gateway(apiName);
     await api.create(apiName);
-    deployment.api = api
+    CORE.#deployment.api = api;
     const iam = new Iam();
     const lambdaRole = await iam.createLambdaRole();
 
@@ -90,8 +104,8 @@ class CORE {
       );
 
       let arn = await lambda.create(lambdaRole);
-      
-      deployment.lambdas.push(arn)
+
+      CORE.#deployment.lambdas.push(arn);
       // **TODO**: should be able to configure the method for each lambda
       const methods = [
         "OPTIONS",
@@ -123,7 +137,8 @@ class CORE {
     const { buildFolder } = config.core;
     await walkDirs(buildFolder, async (path) => {
       let data = fs.readFileSync(path);
-      await bucket.uploadObject(data, path, true);
+      const file = await bucket.uploadObject(data, path, true);
+      if (file) CORE.#deployment.files.push(file);
     });
   }
 
@@ -151,7 +166,7 @@ class CORE {
    *   @param {string} apiUrl the gateway api url that will be used to deploy the edge lambda.
    *   @returns {Promise<{gatewayUrl}>} return an object with the gatewayURl inside.
    */
-  static async deployEdgeLambda(bucket, apiUrl, deployment) {
+  static async deployEdgeLambda(bucket, apiUrl) {
     const zipper = new Zip();
     const func = this.createProxy(apiUrl);
     const name = uuid.v4();
@@ -165,14 +180,14 @@ class CORE {
     const edgeArn = await iam.createEdgeRole("therole");
     const edgelambda = new Lambda(bucket.bucketName, `edge-proxy.zip`);
     let proxyArn = await edgelambda.create(edgeArn);
-    console.log("proxy arn: ", proxyArn)
-    console.log("is versioned? ", edgelambda.versioned)
+    console.log("proxy arn: ", proxyArn);
+    console.log("is versioned? ", edgelambda.versioned);
     if (!edgelambda.versioned) {
       await edgelambda.deployVersion();
       console.log("reached versioning");
-      proxyArn = `${edgelambda.arn}:${edgelambda.version}`
+      proxyArn = `${edgelambda.arn}:${edgelambda.version}`;
     }
-    deployment.edgeLambdas.push(proxyArn)
+    CORE.#deployment.edgeLambdas.push(proxyArn);
     // console.log(edgelambda.arn + ":" + edgelambda.version); // debugging step
 
     return Promise.resolve({ proxyArn });
@@ -197,31 +212,12 @@ class CORE {
     );
     return Promise.resolve({ distribution });
   }
-  static async invalidateDistribution(distributionId, proxyARN) {
+  static async invalidateDistribution(distributionid) {
     const { region } = config.core;
-    let cf = new CloudFrontWrapper(region)
-    const { Etag, DistributionConfig } = await cf.getDistribution(distributionId)
-    DistributionConfig.CacheBehaviors.LambdaFunctionAssociations = {
-      Quantity: "1",
-      Items: [
-        {
-          EventType: "viewer-request",//types.EventTypeViewerRequest
-          LambdaFunctionARN: proxyARN,
-          IncludeBody: true,
-        },
-      ],      
-    }
-    
-    let { Distribution: distribution } = await cf.client.updateDistribution({
-      Id: distributionId,
-      ifMatch: Etag,
-      DistributionConfig
-    })
-    let confirmation = await cf.client.createInvalidation({
-      DistributionId: distributionId
-    })
+    let cf = new CloudFrontWrapper(region);
+    let distribution = await cf.invalidateDistribution(distributionId);
 
-    return Promise.resolve({...confirmation, ...distribution});
+    return Promise.resolve(distribution);
   }
 
   static async updateCors(domainName) {

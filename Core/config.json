@@ -5,7 +5,7 @@
   "gatewayUrl": "https://lm3a7pkvq2.execute-api.us-east-1.amazonaws.com",
   "deploy": {
     "buildCommand": "cd Demo && npm i && npm run build",
-    "bucket": "new-bucket-etwesfchdyx",
+    "bucket": "new-bucket-u676c5ic658ic658",
     "region": "us-east-1"
   },
   "core": {

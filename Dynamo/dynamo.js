@@ -36,9 +36,30 @@ class Dynamo {
         BillingMode: "PAY_PER_REQUEST"
       })
       this.table = res
+
+      await AWS.waitForTableExists({
+        client: this.client,
+        maxWaitTime: 12,
+      },
+      {
+        TableName: tableName,
+      })
+
       return res;
     } catch (error) {
-      console.log("table already exists, ", error.message)
+
+      switch (error.name) {
+        case "ResourceInUseException": {
+          this.table = await this.client.describeTable({
+            TableName: tableName,
+          })
+
+          return this.table;
+        }
+        default : {
+          console.log("table already exists, ", error.message)
+        }
+      }
     }
   }
   format({ projectName, bucket, ...config }) {
@@ -104,12 +125,12 @@ class Dynamo {
         const item = Items[index];
 
         if (callback) await callback(this.deformat(item));
-        
+
         const { projectName, timeCreated } = item;
         const Key = {projectName, timeCreated}
         let result = await this.client.deleteItem({
           TableName: tableName,
-          Key 
+          Key
         })
         results.push(result);
       }
@@ -137,7 +158,7 @@ class Dynamo {
     try {
       let confirmation = await this.client.putItem({
         TableName: tableName,
-        Item: this.format(items)
+        Item: this.formatStrings(items)
       })
       return Promise.resolve(confirmation);
     } catch (error) {

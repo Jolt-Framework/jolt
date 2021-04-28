@@ -5,18 +5,19 @@ const { projectName, tableName } = require('./config.json')
 const run = async () => {
   try {
     let dynamo = new Dynamo()
-    const { Items } = await dynamo.getItems(tableName);
-    console.log(Items)
-    await dynamo.deleteItems(tableName, async ({ config }) => {
-      // console.log(Object.keys(config));
-      let teardown = new Teardown(config)
-      await teardown.all()
-    })
-    
-    await dynamo.deleteTable(tableName);
+    await dynamo.createTable(tableName);
+    let items = await dynamo.getItems(tableName);
+    // await dynamo.addItemsToTable(tableName, {
+    //   projectName,
+    //   timeCreated: new Date().toString(),
+    //   third: "hey ezra"
+    // })
+    console.log(items);
   } catch (error) {
     console.log(error.message)
   }
+
+
 }
 
 

@@ -7,13 +7,30 @@ const Teardown = require('../Teardown/teardown')
 const Dynamo = require('../Dynamo/dynamo');
 const Gateway = require("../APIGateway/gateway");
 const { bucket: bucketName, buildCommand, region} = config.deploy;
-const { tableName, projectName, cloudfrontId, gatewayUrl } = config;
+const { tableName, projectName, cloudfrontId  } = config;
+
+
+// TODO get from config
+// const gatewayStage = "test";
+
 let deployment = {
   tableName,
   projectName,
   lambdas: [],
   edgeLambdas: []
 };
+let db = new Dynamo();
+
+const getMostRecentDist = async (tableName) => {
+  let distributions = await db.getItems(tableName);
+  if (distributions.length === 0)
+    throw new Error(
+      "cannot update, try creating a distribution first, run corepack deploy from the cli"
+    );
+  const criteria = (a, b) =>
+    Number(a.timeCreated) - Number(b.timeCreated) > 0 ? a : b;
+  return distributions.reduce(criteria, []);
+}
 const run = async () => {
   try {
     console.log("Building started");
@@ -31,25 +48,27 @@ const run = async () => {
     throw new Error(error.message);
   }
 
-
   let torn = false
   deployment.deployed = false;
-  let db = new Dynamo();
+  const previousDistribution = await getMostRecentDist(tableName)
+
+
+
   try {
     const ref = "CORE-Jamstack:" + uuid.v4();
     const bucket = new S3(bucketName);
-    await bucket.createBucket();
-    deployment.region = region
-    deployment.bucket = bucketName
-    const res = await CORE.updateLambdas(bucket, deployment);
-    await CORE.deployStaticAssets(bucket, deployment);
-    const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl, deployment);
-    
+    deployment.region = region;
+    deployment.bucket = bucketName;
+    const res = await CORE.updateLambdasAndGateway(bucket, previousDistribution.api);
+
+    await CORE.deployStaticAssets(bucket);
+
     const cloudfrontRes = await CORE.invalidateDistribution(cloudfrontId);
-    console.log("from cloudfront:", cloudfrontRes)
+
     deployment.cloudfrontId = cloudfrontId
     console.log("Successfully deployed application find it here:\n", domainName);
     deployment.deployed = true;
+
   } catch (error) {
 
     console.log("unable to complete distribution, process failed because: ", error.message);
@@ -67,9 +86,9 @@ const run = async () => {
     await db.createTable(deployment.tableName)
     await db.addItemsToTable(deployment.tableName, deployment)
   }
-  
+
   console.log("the deployment: ", deployment);
-  
+
   // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist
 };
 

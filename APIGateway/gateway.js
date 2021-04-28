@@ -32,10 +32,11 @@ class Gateway {
   /**
    * @param {string} apiName
    */
-  constructor(apiName) {
+  constructor(apiName, stageName) {
     this.client = new gateway.ApiGatewayV2({ region: "us-east-1" });
     this.apiName = apiName;
     Gateway.all.push(this);
+    if(stageName) this.stageName = stageName;
   }
 
   /**
@@ -112,6 +113,52 @@ class Gateway {
       console.log("unable to create api: " + this.apiName);
       throw new Error(error.message);
     }
+  }
+
+
+  async #getRoutes() {
+    let routes;
+    try {
+      routes = await this.client.getRoutes({
+        ApiId: this.apiId,
+      });
+    } catch (error) {
+      throw new Error(error.message);
+    }
+
+    this.#routes = routes.Items;
+  }
+
+  async #getIntegrations() {
+    let integrations =  await this.client.getIntegrations({
+      ApiId: this.apiId,
+    });
+
+    return integrations.Items;
+  }
+
+  async update(apiId, lambdas) { //arns of the previous deployment.
+    this.apiId = apiId;
+    // get the routes for the api.
+    // for each "Target" we have an integration path, we can either update the integration or create a new one
+    await this.#getRoutes();
+    let integrations = await this.#getIntegrations();
+
+    for (const integration of integrations) {
+      const lambdaForIntegration = lambdas.find((arn) => {
+        arn = arn.replace(/:\d+$/, "");
+        return integration.IntegrationUri.match(arn);
+      });
+
+      await this.client.updateIntegration({
+        ApiId: this.apiId,
+        IntegrationId: integration.IntegrationId,
+        IntegrationUri: lambdaForIntegration,
+      });
+    }
+
+    await this.deploy(this.stageName, `updated integrations for ${JSON.stringify(lambdas)}`);
+
   }
 
   /**
@@ -251,3 +298,11 @@ class Gateway {
 }
 
 module.exports = Gateway;
+
+const test = async () => {
+  const api = new Gateway("testName");
+  await api.update("dcxzfen2fd", ["arn:aws:lambda:us-east-1:444510759772:function:createNote:1"])
+
+};
+
+test();

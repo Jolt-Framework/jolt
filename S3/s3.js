@@ -2,10 +2,14 @@ const {
   S3Client,
   CreateBucketCommand,
   PutObjectCommand,
+
   ListObjectsCommand,
   DeleteBucketCommand,
   DeleteObjectsCommand,
   HeadBucketCommand,
+  PutBucketVersioningCommand,
+  ListObjectVersionsCommand,
+  DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 
 const fs = require("fs");
@@ -17,8 +21,9 @@ class S3 {
 
   });
 
-  constructor(bucketName) {
+  constructor(bucketName, deployment) {
     this.bucketName = bucketName;
+    this.deployment = deployment;
     // this.createBucket();
   }
   async makePublic(key) {
@@ -40,8 +45,20 @@ class S3 {
       try {
         await S3.Client.send(new CreateBucketCommand(bucketParams));
         console.log(`Successfully created the bucket:${this.bucketName}`);
-      } catch (err) {
-        throw new Error(`someone else has that bucket name or it's not accessible to you, error: ${err.message}`);
+
+        try {
+          await S3.Client.send(new PutBucketVersioningCommand({
+            Bucket: this.bucketName,
+            VersioningConfiguration: {
+              Status: "Enabled"
+            }
+          }))
+        } catch (error) {
+          throw new Error(`Bucket versioning could not be enabled, error: ${error.message}`);
+        }
+
+      } catch (error) {
+        throw new Error(`someone else has that bucket name or it's not accessible to you, error: ${error.message}`);
       }
     } else {
       console.log("Bucket already exists.");
@@ -59,30 +76,82 @@ class S3 {
 
     try {
       const res = await S3.Client.send(new PutObjectCommand(objectParams));
-      console.log(`${fileName} uploaded to S3`);
-    } catch(err) {
-      console.log(`Error occurred creating file ${fileName}:\n${err}`);
+
+      const VersionId = res.VersionId;
+      let Key = fileName;
+      console.log("key:", Key);
+      console.log("VersionId:", VersionId);
+
+      return {Key, VersionId};
+    } catch(error) {
+      console.log(`Error occurred creating file ${fileName}:\n${error.message}`);
     }
   }
 
-  static async teardown(Bucket) {
+  static async teardown(bucketName, Objects) {
+    // given bucketName and an array of {fileName, version}
+    if (Objects.length === 0) return;
+    let deleteObjectsParams
     try {
-      const bucketParams = {Bucket};
-      const {Contents} = await this.Client.send(new ListObjectsCommand(bucketParams));
+      const { Contents } = await this.Client.send(
+        new ListObjectsCommand(bucketParams)
+      );
 
-      if (Contents) {
-        const Objects = Contents.map(({Key}) => ({Key}));
-        const deleteObjectsParams = Object.assign({Delete: {Objects}}, bucketParams);
+      deleteObjectsParams = {
+        Delete: { Objects },
+        Bucket: bucketName
+      };
+
+
 
         await this.Client.send(new DeleteObjectsCommand(deleteObjectsParams));
-
         console.log("Objects deleted");
-      }
+    } catch (error) {
+      console.log("the params", deleteObjectsParams)
+      console.log("Deleting versioned objects failed with:\n", error.message);
+      this.teardownAll(bucketName);
+    }
+  }
+
+  static async teardownAll(Bucket) {
+    try {
+      const bucketParams = { Bucket };
+
+
+        let Objects = await this.Client.send(new ListObjectVersionsCommand({
+          Bucket,
+          KeyMarker: "/",
+        }));
+
+        Objects = Objects.Versions.map(({ Key, VersionId }) => {
+          return {Key, VersionId};
+        });
+
+        for (const object of Objects) {
+          await this.Client.send(new DeleteObjectCommand({
+            Bucket,
+            ...object,
+          }));
+          console.log("Objects Marked for deletion");
+        }
+
+
+        // const Contents = await this.Client.send(
+        //   new ListObjectsCommand(bucketParams)
+        //   );
+        // let Objects = Contents;
+        // console.log(Contents);
+        // deleteObjectsParams = { Objects: Objects.map(({ Key }) => {
+        //   return { Key, Bucket};
+        // }) }
+
+        // await this.Client.send(new DeleteObjectsCommand(deleteObjectsParams));
+        // console.log("Objects deleted");
 
       await this.Client.send(new DeleteBucketCommand(bucketParams))
       console.log("Bucket deleted");
-    } catch(err) {
-      console.log("Deleting bucket failed with:\n", err.message);
+    } catch(error) {
+      console.log("Deleting bucket failed with:\n", error.message);
     }
   }
 

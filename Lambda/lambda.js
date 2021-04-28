@@ -4,8 +4,10 @@ const {
   AddPermissionCommand,
   DeleteFunctionCommand,
   PublishVersionCommand,
-  UpdateFunctionCodeCommand
+  UpdateFunctionCodeCommand,
+  ListVersionsByFunctionCommand
 } = require("@aws-sdk/client-lambda");
+const { version } = require("esbuild");
 const path = require('path');
 
 // For testing - Replace with IAM class import
@@ -57,6 +59,7 @@ class Lambda /*extends something?*/ {
         S3Bucket: this.S3Bucket,
         S3Key: this.S3Key,
       },
+      Publish: true,
       FunctionName,
       Handler: `${FunctionName}.handler`,
       Role: role,
@@ -84,7 +87,7 @@ class Lambda /*extends something?*/ {
         console.log("this is the version", result.Version)
         this.version = result.Version
         this.arn = result.FunctionArn
-        return Promise.resolve(result.FunctionArn)
+        return Promise.resolve(result.FunctionArn);
       } catch (error) {
         console.log("unable to update the function's code, \n", error.message)
       }
@@ -143,14 +146,27 @@ class Lambda /*extends something?*/ {
     }
   }
 
+  static async #getVersions(arn) {
+    arn = arn.replace(/:\d+$/, "");
+    let details = await Lambda.Client.send(new ListVersionsByFunctionCommand({FunctionName: arn}));
+
+    return details.Versions;
+  }
+
   /**
    * Teardown all Lambdas when project is deleted
    * @param {array}
   */
   static async teardown(lambdaList) {
     for (let index = 0; index < lambdaList.length; index++) {
-      const arn = lambdaList[index];
-      console.log("deleting, ", arn)
+
+      let arn = lambdaList[index];
+      let versionlessARN = arn.replace(/:\d+$/, "");
+
+      if (await Lambda.#getVersions(versionlessARN).length > 1) arn = versionlessARN;
+
+      console.log("deleting, ", arn);
+
       await Lambda.#delete(arn);
     }
     // lambdaList.forEach((lambda) => { // this refers to an arn
