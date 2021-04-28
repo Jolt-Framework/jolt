@@ -8,7 +8,7 @@ const run = async () => {
     const { Items } = await dynamo.getItems(tableName);
     console.log(Items)
     await dynamo.deleteItems(tableName, async ({ config }) => {
-      console.log(Object.keys(config));
+      // console.log(Object.keys(config));
       let teardown = new Teardown(config)
       await teardown.all()
     })

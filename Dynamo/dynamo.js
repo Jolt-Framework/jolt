@@ -102,7 +102,9 @@ class Dynamo {
       let { Items } = await this.getItems(tableName)
       for (let index = 0; index < Items.length; index++) {
         const item = Items[index];
+
         if (callback) await callback(this.deformat(item));
+        
         const { projectName, timeCreated } = item;
         const Key = {projectName, timeCreated}
         let result = await this.client.deleteItem({

@@ -218,7 +218,7 @@ class CORE {
       DistributionConfig
     })
     let confirmation = await cf.client.createInvalidation({
-      DistributionId: distributionId,
+      DistributionId: distributionId
     })
 
     return Promise.resolve({...confirmation, ...distribution});
