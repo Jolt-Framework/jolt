@@ -80,6 +80,7 @@ class CORE {
     CORE.#deployment.api = api;
     const iam = new Iam();
     const lambdaRole = await iam.createLambdaRole();
+    console.log('creating functions and api gateway');
 
     await walkDirs(functionsFolder, async (path) => {
       const funcName = this.toFuncName(path);
@@ -124,6 +125,7 @@ class CORE {
     await api.createStage(gatewayStage);
     await api.deploy(gatewayStage, gatewayDescription);
     this.api = api;
+    console.log("functions and api gatway deployed to stage: /", gatewayStage)
     return Promise.resolve({
       gatewayUrl:
         `https://${api.apiId}.execute-api.${region}.amazonaws.com/` + "test",
@@ -170,7 +172,7 @@ class CORE {
     const zipper = new Zip();
     const func = this.createProxy(apiUrl);
     const name = uuid.v4();
-
+    console.log("creating edge lambda")
     zipper.addFile(`edge-proxy.js`, Buffer.alloc(func.length, func));
 
     const proxy = zipper.toBuffer();
@@ -180,16 +182,13 @@ class CORE {
     const edgeArn = await iam.createEdgeRole("therole");
     const edgelambda = new Lambda(bucket.bucketName, `edge-proxy.zip`);
     let proxyArn = await edgelambda.create(edgeArn);
-    console.log("proxy arn: ", proxyArn);
-    console.log("is versioned? ", edgelambda.versioned);
     if (!edgelambda.versioned) {
       await edgelambda.deployVersion();
-      console.log("reached versioning");
       proxyArn = `${edgelambda.arn}:${edgelambda.version}`;
     }
     CORE.#deployment.edgeLambdas.push(proxyArn);
-    // console.log(edgelambda.arn + ":" + edgelambda.version); // debugging step
 
+    console.log("edge lambda deployed");
     return Promise.resolve({ proxyArn });
   }
 

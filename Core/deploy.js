@@ -46,10 +46,11 @@ const sendToDB = async (deployment) => {
     await teardown.all();
     return;
   }
-
+  console.log("sending deployment to the database")
   let db = new Dynamo();
   await db.createTable(deployment.tableName)
   await db.addItemsToTable(deployment.tableName, deployment)
+  console.log("successfully deployed to the database")
 }
 
 

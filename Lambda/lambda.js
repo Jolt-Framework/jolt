@@ -73,8 +73,7 @@ class Lambda /*extends something?*/ {
       return Promise.resolve(result.FunctionArn);
     } catch (err) {
       try {
-        console.log(err.message);
-        console.log("attempting  update tothe existing function...")
+        console.log(err.message, "updating...");
         let params = {
           Publish: true,
           S3Bucket: this.S3Bucket,
@@ -82,9 +81,7 @@ class Lambda /*extends something?*/ {
           FunctionName
         }
         result = await Lambda.Client.send(new UpdateFunctionCodeCommand(params))
-        console.log("updated function: \n", result.FunctionName)
         this.versioned = true;
-        console.log("this is the version", result.Version)
         this.version = result.Version
         this.arn = result.FunctionArn
         return Promise.resolve(result.FunctionArn);

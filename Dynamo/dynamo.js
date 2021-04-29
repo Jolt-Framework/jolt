@@ -81,7 +81,6 @@ class Dynamo {
         S: JSON.stringify(config),
       }
     }
-    console.log(" items", items)
     return items
   }
 
@@ -103,7 +102,9 @@ class Dynamo {
     let keys = Object.keys(items)
     let result = {}
     keys.forEach(key => {
-      result[key] = {S: items[key]}
+      let item = items[key]
+      if( typeof item !== "string") JSON.stringify(item)
+      result[key] = {S: item}
     })
     return result;
   }
@@ -158,7 +159,7 @@ class Dynamo {
     try {
       let confirmation = await this.client.putItem({
         TableName: tableName,
-        Item: this.formatStrings(items)
+        Item: this.format(items)
       })
       return Promise.resolve(confirmation);
     } catch (error) {
