@@ -79,35 +79,28 @@ class S3 {
 
       const VersionId = res.VersionId;
       let Key = fileName;
-      console.log("key:", Key);
-      console.log("VersionId:", VersionId);
-
       return {Key, VersionId};
     } catch(error) {
       console.log(`Error occurred creating file ${fileName}:\n${error.message}`);
     }
   }
 
-  static async teardown(bucketName, Objects) {
+  static async teardown(Bucket, Objects) {
     // given bucketName and an array of {fileName, version}
     if (Objects.length === 0) return;
-    let deleteObjectsParams
     try {
-      const { Contents } = await this.Client.send(
-        new ListObjectsCommand(bucketParams)
-      );
+       console.log(`marking current distribution objects for deletion`);
+      for (const object of Objects) {
+          await this.Client.send(new DeleteObjectCommand({
+            Bucket,
+            ...object,
+          }));
+        }
+     
 
-      deleteObjectsParams = {
-        Delete: { Objects },
-        Bucket: bucketName
-      };
-
-
-
-        await this.Client.send(new DeleteObjectsCommand(deleteObjectsParams));
-        console.log("Objects deleted");
+      console.log("Objects deleted");
+      
     } catch (error) {
-      console.log("the params", deleteObjectsParams)
       console.log("Deleting versioned objects failed with:\n", error.message);
       this.teardownAll(bucketName);
     }
@@ -132,7 +125,7 @@ class S3 {
             Bucket,
             ...object,
           }));
-          console.log("Objects Marked for deletion");
+          console.log(`${object.key} Marked for deletion`);
         }
 
 

@@ -75,7 +75,7 @@ class CORE {
       gatewayStage,
       gatewayDescription,
     } = config.core; // will later need a relative path to the functions folder along with the name.
-    const api = new Gateway(apiName);
+    const api = new Gateway(apiName, gatewayStage);
     await api.create(apiName);
     CORE.#deployment.api = api;
     const iam = new Iam();

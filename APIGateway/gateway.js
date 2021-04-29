@@ -242,7 +242,7 @@ class Gateway {
    * @param {string} method "DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH"
    * @param {string} path the path for the endpoint
    * @param {string} functionName the name of the lambda function
-   * @returns {Promis<gateway.CreateRouteCommandOutput>}
+   * @returns {Promise<gateway.CreateRouteCommandOutput>}
    */
   async addRoute(method, path, functionName) {
     let route;
@@ -299,10 +299,10 @@ class Gateway {
 
 module.exports = Gateway;
 
-const test = async () => {
-  const api = new Gateway("testName");
-  await api.update("dcxzfen2fd", ["arn:aws:lambda:us-east-1:444510759772:function:createNote:1"])
+// const test = async () => {
+//   const api = new Gateway("testName");
+//   await api.update("dcxzfen2fd", ["arn:aws:lambda:us-east-1:444510759772:function:createNote:1"])
 
-};
+// };
 
-test();
+// test();

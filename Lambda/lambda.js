@@ -119,7 +119,6 @@ class Lambda /*extends something?*/ {
         StatementId: "thisisalambda",
         Action: 'lambda:InvokeFunction',
         Principal: 'apigateway.amazonaws.com',
-        // SourceArn: this.gatewayArn,
       }
       await Lambda.Client.send(new AddPermissionCommand(params));
       console.log("Successfully added permissions to lambda.");
@@ -139,7 +138,6 @@ class Lambda /*extends something?*/ {
         FunctionName: arn
       }
       await Lambda.Client.send(new DeleteFunctionCommand(params));
-      console.log("Successfully deleted the lambda:", arn);
     } catch (error) {
       console.log("Error deleting the lambda: ", error.message);
       if(!error.message.includes("edge-proxy"))throw new Error(error.message)
@@ -158,17 +156,17 @@ class Lambda /*extends something?*/ {
    * @param {array}
   */
   static async teardown(lambdaList) {
+    console.log("deleting lambdas");
     for (let index = 0; index < lambdaList.length; index++) {
-
       let arn = lambdaList[index];
       let versionlessARN = arn.replace(/:\d+$/, "");
 
       if (await Lambda.#getVersions(versionlessARN).length > 1) arn = versionlessARN;
-
-      console.log("deleting, ", arn);
-
       await Lambda.#delete(arn);
     }
+
+    console.log("successfully deleted all lambdas");
+
     // lambdaList.forEach((lambda) => { // this refers to an arn
     //   console.log("deleting ",lambda)
     //   Lambda.#delete(lambda)

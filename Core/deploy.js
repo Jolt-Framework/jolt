@@ -29,10 +29,9 @@ const createDeployment = async (deployment) => {
   deployment.region = region
   deployment.bucket = bucketName
   CORE.deployment = deployment;
-  await CORE.deployStaticAssets(bucket);
   const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket);
+  await CORE.deployStaticAssets(bucket);
   const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
-
   const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, ref);
   deployment.cloudfrontId = distribution.Id
   const { DomainName: domainName } = distribution;
