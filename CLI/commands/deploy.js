@@ -4,4 +4,4 @@ const deploy = () => {
   run();
 }
 
-module.exports = { deploy };
+module.exports = deploy;

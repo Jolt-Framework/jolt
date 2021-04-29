@@ -127,4 +127,4 @@ const init = async () => {
   return JSON.stringify(formattedResults);
 };
 
-module.exports = { init };
+module.exports = init;

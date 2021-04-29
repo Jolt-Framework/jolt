@@ -115,7 +115,6 @@ const createDeploymentTemplate = () => {
 
 
 const run = async () => {
-  
   try {
     await buildProcess()
   } catch (error) {
@@ -138,5 +137,5 @@ const run = async () => {
 
   console.log("the deployment ", deployment)
 }
+
 module.exports = run;
-// run(createDeploymentTemplate());

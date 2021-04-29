@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 const { Command } = require('commander');
-const { init } = require('./commands/init');
+const init = require('./commands/init');
 // const { help } = require("./commands/help");
-const { deploy } = require("./commands/deploy");
+const deploy = require("./commands/deploy");
+const secrets = require("./commands/secrets");
 // const { destroy } = require("./commands/destroy");
 
 const program = new Command();
@@ -31,6 +32,12 @@ program
   .description("Provision AWS infrastucture, build your application and deploy everything to AWS")
   .action(deploy);
 
+// Init
+program
+  .command("secrets")
+  .alias("s")
+  .description("Send all environment variables (found in .env files) to associated Lambdas")
+  .action(secrets);
 // // Destroy
 // program
 //   .command("destroy")
