@@ -30,7 +30,6 @@ const createDeployment = async (deployment) => {
   deployment.bucket = bucketName
   CORE.deployment = deployment;
   await CORE.deployStaticAssets(bucket);
-  throw new Error("bucket check");
   const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket);
   const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
 
@@ -56,6 +55,7 @@ const sendToDB = async (deployment) => {
 
 
 const run = async (deployment) => {
+
   try {
     await buildProcess()
   } catch (error) {
@@ -68,6 +68,7 @@ const run = async (deployment) => {
   try {
     await createDeployment(deployment)
   } catch (error) {
+    torn = true;
     await teardown(
       "unable to complete distribution, process failed because: ",
       error,

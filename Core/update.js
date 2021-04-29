@@ -25,7 +25,7 @@ const getMostRecentDist = async (tableName) => {
   let distributions = await db.getItems(tableName);
   if (distributions.length === 0)
     throw new Error(
-      "cannot update, try creating a distribution first, run corepack deploy from the cli"
+      "cannot update, try creating a distribution first, run core deploy from the cli"
     );
   const criteria = (a, b) =>
     Number(a.timeCreated) - Number(b.timeCreated) > 0 ? a : b;
