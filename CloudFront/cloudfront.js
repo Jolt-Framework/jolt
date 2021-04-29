@@ -29,10 +29,10 @@ class CloudFrontWrapper {
     }
   }
 
+
   async getDistribution(id) {
     try {
       const { ETag, Distribution } = await this.client.getDistribution({ Id: id })
-
       return { ETag, DistributionConfig: Distribution.DistributionConfig };
     } catch (error) {
       console.log(`Distribution: ${id} does not exist`);
@@ -40,50 +40,59 @@ class CloudFrontWrapper {
     }
   }
 
-  async deleteDistribution(id, time = 0) {
+  async deleteDistribution(id, callback) {
     try {
       const { ETag } = await this.getDistribution(id);
       try {
         const confirmation = await this.client.deleteDistribution({ Id: id, IfMatch: ETag });
         console.log("Distribution successfully deleted:\n", confirmation);
-      } catch (error) {
-        if (time > 300000) {
-          console.log("Too many retries, please wait and try this operation at another time");
-          return;
-        }
-        const newTime = time + 120000;
-        console.log(`Unable to delete at this time, will try again in ${newTime / 1000} seconds(times out at 5)`);
-
-        setTimeout(() => {
-          this.deleteDistribution(id, newTime);
-        }, newTime);
+        if (callback) await callback()
+      } catch(err) {
+        console.log("unable to delete distribution", err.message)
       }
     } catch (error) {
-      console.log("Distribution not found.");
+        console.log("Distribution not found.");
+        return callback();
     }
+  }
+
+  async invalidateDistribution(id ) {
+    const res = await this.client.invalidateDistribution({ DistributionId: id })
+    let newRes = await AWS.waitForInvalidationCompleted({
+      maxWaitTime: 300,
+      client: this.client
+    },
+    {
+      DistributionId: id,
+      Id: res.Invalidation.Id
+    });
+
+    return newRes;
   }
 
   async disableDistribution(id) {
     this.enabled = false;
     const distribution = await this.getDistribution(id);
     const { ETag, DistributionConfig } = distribution;
-
     if (!DistributionConfig.Enabled) return distribution;
 
+    DistributionConfig.CacheBehaviors.LambdaFunctionAssociations = {
+      Quantity: "0"
+    };
     const params = {
       Id: id,
       IfMatch: ETag,
       DistributionConfig: { ...DistributionConfig, Enabled: this.enabled },
     }
 
-    // console.log("the dist", DistributionConfig)
     try {
-      const {Distribution} = await this.client.updateDistribution(params);
+      const { Distribution } = await this.client.updateDistribution(params);
       console.log("Distribution successfully updated:\n", Distribution);
-
-      const reference = DistributionConfig.CallerReference;
-      CloudFrontWrapper.distributions[reference] = Distribution;
-      return Distribution;
+      const distribution = await AWS.waitForDistributionDeployed({
+        client: this.client,
+        maxWaitTime: 360
+      }, { Id: Distribution.Id });
+      return distribution;
     } catch (error) {
       console.log("unable to update distribution");
       throw new Error(error.message);

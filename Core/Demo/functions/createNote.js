@@ -2,6 +2,12 @@ const faunadb = require("faunadb");
 const query = faunadb.query;
 
 exports.handler = async (event, context, callback) => {
+  try {
+    event = JSON.parse(event.body)
+  } catch (error) {
+    event = event;
+  }
+  
   const data = event;
   let res;
   try {

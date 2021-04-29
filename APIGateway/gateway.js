@@ -2,6 +2,8 @@ const {
   AuthorizationType,
   IntegrationType,
 } = require("@aws-sdk/client-apigatewayv2");
+const token = require("../Utilities/getAccountId");
+
 const gateway = require("@aws-sdk/client-apigatewayv2");
 //TODO: Make sure API is created before invoking any function besides create.
 
@@ -32,10 +34,12 @@ class Gateway {
   /**
    * @param {string} apiName
    */
-  constructor(apiName) {
-    this.client = new gateway.ApiGatewayV2({ REGION: "us-east-1" });
+  constructor(apiName, AWS_REGION, stageName) {
+    this.client = new gateway.ApiGatewayV2({ region: AWS_REGION });
     this.apiName = apiName;
+    this.region = AWS_REGION;
     Gateway.all.push(this);
+    if (stageName) this.stageName = stageName;
   }
 
   /**
@@ -54,7 +58,7 @@ class Gateway {
       return data;
     } catch (error) {
       console.log(
-        `unable to deploy api gateway with an id of: ${this.apiId} to the stage: ${StageName}`
+        `Unable to deploy API gateway with an id of: ${this.apiId} to the stage: ${StageName}`
       );
       throw new Error(error.message);
     }
@@ -66,10 +70,11 @@ class Gateway {
   async deleteApi() {
     try {
       const data = await this.client.deleteApi({ ApiId: this.apiId });
-      return data;
+      console.log("api deleted");
+      return Promise.resolve(data);
     } catch (error) {
       console.log(
-        "unable to delete or find gateway with an id of: ",
+        "Unable to delete or find API gateway with an id of: ",
         this.apiId
       );
       throw new Error(error.message);
@@ -108,9 +113,55 @@ class Gateway {
       this.#created = true;
       return Promise.resolve(this);
     } catch (error) {
-      console.log("unable to create api: " + this.apiName);
+      console.log("Unable to create API gateway: " + this.apiName);
       throw new Error(error.message);
     }
+  }
+
+
+  async #getRoutes() {
+    let routes;
+    try {
+      routes = await this.client.getRoutes({
+        ApiId: this.apiId,
+      });
+    } catch (error) {
+      throw new Error(error.message);
+    }
+
+    this.#routes = routes.Items;
+  }
+
+  async #getIntegrations() {
+    let integrations =  await this.client.getIntegrations({
+      ApiId: this.apiId,
+    });
+
+    return integrations.Items;
+  }
+
+  async update(apiId, lambdas) { //arns of the previous deployment.
+    this.apiId = apiId;
+    // get the routes for the api.
+    // for each "Target" we have an integration path, we can either update the integration or create a new one
+    await this.#getRoutes();
+    let integrations = await this.#getIntegrations();
+
+    for (const integration of integrations) {
+      const lambdaForIntegration = lambdas.find((arn) => {
+        arn = arn.replace(/:\d+$/, "");
+        return integration.IntegrationUri.match(arn);
+      });
+
+      await this.client.updateIntegration({
+        ApiId: this.apiId,
+        IntegrationId: integration.IntegrationId,
+        IntegrationUri: lambdaForIntegration,
+      });
+    }
+
+    await this.deploy(this.stageName, `updated integrations for ${JSON.stringify(lambdas)}`);
+
   }
 
   /**
@@ -164,8 +215,8 @@ class Gateway {
     if (this.#integrations[functionName])
       return this.#integrations[functionName];
 
-    const lambdaRegion = "us-east-1";
-    const functionARN = `arn:aws:lambda:${lambdaRegion}:444510759772:function:${functionName}`;
+    let account = await token(this.region);
+    const functionARN = `arn:aws:lambda:${this.region}:${account}:function:${functionName}`;
     let integration;
     try {
       integration = await this.client.createIntegration({
@@ -194,11 +245,10 @@ class Gateway {
    * @param {string} method "DELETE, GET, HEAD, OPTIONS, POST, PUT, PATCH"
    * @param {string} path the path for the endpoint
    * @param {string} functionName the name of the lambda function
-   * @returns {Promis<gateway.CreateRouteCommandOutput>}
+   * @returns {Promise<gateway.CreateRouteCommandOutput>}
    */
   async addRoute(method, path, functionName) {
     let route;
-    console.log("this is the api id:", this.apiId);
     let integration = await this.#createIntegration(functionName);
 
 

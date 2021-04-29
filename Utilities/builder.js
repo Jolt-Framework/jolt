@@ -5,17 +5,17 @@ const spawn = require("child_process").spawnSync;
  */
 class Builder {
   /**
-   * @param {string} buildCommand command to compile static assets
+   * @param {string} command command to compile static assets
    */
-  constructor(buildCommand) {
-    this.buildCommand = buildCommand;
+  constructor(command) {
+    this.command = command;
   }
 
   #built = false;
 
   async build() {
     if (this.#built === true) return true;
-    const parts = this.buildCommand.split(" ");
+    const parts = this.command.split(" ");
     const cmd = parts[0];
     const argv = parts.slice(1);
     spawn(cmd, argv, { stdio: 'inherit'});

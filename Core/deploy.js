@@ -1,50 +1,141 @@
-const config = require("./config.json");
 const S3 = require("../S3/s3");
 const CORE = require("./core");
 const Builder = require("../Utilities/builder");
-const uuid = require("uuid");
+// const uuid = require("uuid");
+const Teardown = require("../Teardown/teardown");
+const Dynamo = require("../Dynamo/dynamo");
+// const Gateway = require("../APIGateway/gateway");
+// const uniqueId = require("../Utilities/nanoid");
+let config;
 
-const { bucket: bucketName, buildCommand } = config.deploy;
+const getConfig = () => require(process.env.PWD + "/config.json");
+// const { bucket: bucketName, buildCommand, region } = config.deploy;
+// const { tableName, projectName } = config;
+// {
+//   "projectInfo": {
+//     "projectName": "my-test-project2",
+//     "projectId": "my-test-project2-2jzp474qxz"
+//   },
+//   "buildInfo": {
+//     "setupCommand": "npm install",
+//     "buildCommand": "npm run build",
+//     "functionsFolder": "functions",
+//     "buildFolder": "build"
+//   },
+//   "AWSInfo": {
+//     "AWS_REGION": "us-east-1",
+//     "bucketName": "my-test-project2-2jzp474qxz-bucket",
+//     "apiName": "my-test-project2-api",
+//     "gatewayStage": "test",
+//     "gatewayDescription": "test"
+//   }
+// }
 
-const run = async () => {
-  try {
-    console.log("Building started");
+const buildProcess = async () => {
+  if (!config) config = getConfig();
+  const { buildInfo } = config;
 
-    // let commands = buildCommand.split(" && ")
+  console.log("setting up dependencies");
+  const { setupCommand, buildCommand } = buildInfo;
+  const setup = new Builder(setupCommand);
+  await setup.build();
 
-    // commands.forEach(async command => {
-    //   const builder = new Builder(command);
-    //   await builder.build();
-    // })
+  const build = new Builder(buildCommand);
+  await build.build();
 
-    const builder = new Builder(buildCommand);
-    await builder.build();
-    // REMOVE THIS LATER
-    const builder2 = new Builder("cd Demo && mv -r build ../");
-    await builder2.build();
-    // END REMOVE THIS LATER
-    console.log("Build completed!");
-    // const builder = new Builder(buildCommand);
-    // await builder.build();
-  } catch (error) {
-    console.log("Failed to complete build process");
-    // console.log(error.message);
-    throw new Error(error.message);
-  }
-  const ref = "CORE-Jamstack:" + uuid.v4();
-  const bucket = new S3(bucketName);
+  console.log("Build completed!");
+};
+
+const deploymentProcess = async (deployment) => {
+  if (!config) config = getConfig();
+  CORE.config = config;
+  const { bucketName, AWS_REGION } = config.AWSInfo;
+  const { projectId } = config.projectInfo;
+
+  const bucket = new S3(bucketName, deployment);
   await bucket.createBucket();
+
+  deployment.region = AWS_REGION;
+  deployment.bucket = bucketName;
+  CORE.deployment = deployment;
 
   const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket);
 
   await CORE.deployStaticAssets(bucket);
+
   const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
-  const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, ref);
+  const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, projectId);
 
+  deployment.cloudfrontId = distribution.Id
   const { DomainName: domainName } = distribution;
-  console.log("Successfully deployed application find it here:\n", domainName);
+  deployment.domainName = domainName
+  console.log("Successfully deployed application. Find it here:\n", domainName);
+  deployment.deployed = true;
+}
 
-  // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist
+const sendToDB = async (deployment) => {
+  if (!deployment.deployed) {
+    let teardown = new Teardown(deployment)
+    await teardown.all();
+    return;
+  }
+  console.log("sending deployment to the database")
+  let db = new Dynamo();
+  await db.createTable(deployment.tableName)
+  await db.addItemsToTable(deployment.tableName, deployment)
+  console.log("successfully deployed to the database")
+}
+
+
+let torn;// kept here so it's clear where it's changed
+const teardown = async (message, error, deployment) => {
+  try { 
+    console.log(message, error.message);
+    console.log("initiating teardown... ");
+    let teardown = new Teardown(deployment);
+    await teardown.all();
+    torn = true;
+    console.log("teardown completed.");
+  } catch (error) {
+    console.log("unable to tear down, here is the deployment", deployment)
+  }
+}
+
+const createDeploymentTemplate = () => {
+  if (!config) config = getConfig();
+  const { projectId: tableName, projectName } = config.projectInfo;
+  return ({
+    tableName,
+    projectName,
+    files: [],
+    lambdas: [],
+    edgeLambdas: []
+  })
 };
 
-run();
+
+const run = async () => {
+  
+  try {
+    await buildProcess()
+  } catch (error) {
+    return console.log("unable to build the project, error: ", error.message)
+  }
+
+  const deployment = createDeploymentTemplate();
+  try {
+    await deploymentProcess(deployment);
+  } catch (error) {
+    torn = true;
+    return teardown("unable to provision resources", error, deployment)
+  }
+
+  try {
+    if(!torn) await sendToDB(deployment);
+  } catch (error) {
+    return teardown("unable to store deployment in the database", error, deployment)
+  }
+  console.log("the deployment ", deployment)
+}
+module.exports = run;
+// run(createDeploymentTemplate());
