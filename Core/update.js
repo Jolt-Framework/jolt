@@ -23,9 +23,11 @@ let db = new Dynamo();
 
 const getMostRecentDist = async (tableName) => {
   let distributions = await db.getItems(tableName);
+  console.log(distributions)
+  distributions = distributions.filter(dist => dist.projectName === projectName)
   if (distributions.length === 0)
     throw new Error(
-      "cannot update, try creating a distribution first, run core deploy from the cli"
+      `cannot update this distribution, try creating a distribution with the project name ${projectName} first, run core deploy from the cli`
     );
   const criteria = (a, b) =>
     Number(a.timeCreated) - Number(b.timeCreated) > 0 ? a : b;
@@ -91,5 +93,11 @@ const run = async () => {
 
   // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist
 };
+const ans = async () => {
+  const dist = await getMostRecentDist(tableName)
+  console.log(dist)
 
-run();
+}
+// run();
+
+ans()

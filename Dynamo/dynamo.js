@@ -145,10 +145,10 @@ class Dynamo {
   async getItems(tableName) {
     let item;
     try {
-      item = await this.client.scan({
+      const {Items} = await this.client.scan({
         TableName: tableName,
       });
-      return Promise.resolve(item)
+      return Promise.resolve(Items.map(item => this.deformat(item)));
     } catch (e) {
       // console.log(e)
       throw new Error(e.message);
