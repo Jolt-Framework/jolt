@@ -79,11 +79,11 @@ const sendToDB = async (deployment) => {
     await teardown.all();
     return;
   }
-  console.log("sending deployment to the database")
+  console.log("Sending deployment info to the DynamoDB");
   let db = new Dynamo();
   await db.createTable(deployment.tableName)
   await db.addItemsToTable(deployment.tableName, deployment)
-  console.log("successfully deployed to the database")
+  console.log("Deployment successfully recorded in DynamoDB");
 }
 
 
@@ -135,6 +135,7 @@ const run = async () => {
   } catch (error) {
     return teardown("unable to store deployment in the database", error, deployment)
   }
+
   console.log("the deployment ", deployment)
 }
 module.exports = run;

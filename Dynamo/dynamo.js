@@ -2,8 +2,7 @@ const AWS = require("@aws-sdk/client-dynamodb")
 
 class Dynamo {
   static all = []
-  constructor(region) {
-    region ||= "us-east-1";
+  constructor(region = "us-east-1") {
     this.client = new AWS.DynamoDB({ region });
     Dynamo.all.push(this);
   }
@@ -62,6 +61,7 @@ class Dynamo {
       }
     }
   }
+
   format({ projectName, bucket, ...config }) {
     const {cloudfrontId} = config
     let items = {
@@ -81,7 +81,8 @@ class Dynamo {
         S: JSON.stringify(config),
       }
     }
-    return items
+
+    return items;
   }
 
   deformat(items) {
@@ -98,6 +99,7 @@ class Dynamo {
     }
     return result;
   }
+
   formatStrings(items) {
     let keys = Object.keys(items)
     let result = {}
@@ -118,6 +120,7 @@ class Dynamo {
       throw new Error(error.message)
     }
   }
+
   async deleteItems(tableName, callback) {
     let results = [];
     try {
@@ -141,6 +144,7 @@ class Dynamo {
       console.log("error:", error.message);
     }
   }
+
 // timestamp: { S: '1619556774238' },
   async getItems(tableName) {
     let item;
