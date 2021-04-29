@@ -2,6 +2,8 @@ const {
   AuthorizationType,
   IntegrationType,
 } = require("@aws-sdk/client-apigatewayv2");
+const token = require("../Utilities/getAccountId");
+
 const gateway = require("@aws-sdk/client-apigatewayv2");
 //TODO: Make sure API is created before invoking any function besides create.
 
@@ -32,11 +34,12 @@ class Gateway {
   /**
    * @param {string} apiName
    */
-  constructor(apiName, stageName) {
-    this.client = new gateway.ApiGatewayV2({ region: "us-east-1" });
+  constructor(apiName, AWS_REGION, stageName) {
+    this.client = new gateway.ApiGatewayV2({ region: AWS_REGION });
     this.apiName = apiName;
+    this.region = AWS_REGION;
     Gateway.all.push(this);
-    if(stageName) this.stageName = stageName;
+    if (stageName) this.stageName = stageName;
   }
 
   /**
@@ -55,7 +58,7 @@ class Gateway {
       return data;
     } catch (error) {
       console.log(
-        `unable to deploy api gateway with an id of: ${this.apiId} to the stage: ${StageName}`
+        `Unable to deploy API gateway with an id of: ${this.apiId} to the stage: ${StageName}`
       );
       throw new Error(error.message);
     }
@@ -71,7 +74,7 @@ class Gateway {
       return Promise.resolve(data);
     } catch (error) {
       console.log(
-        "unable to delete or find gateway with an id of: ",
+        "Unable to delete or find API gateway with an id of: ",
         this.apiId
       );
       throw new Error(error.message);
@@ -110,7 +113,7 @@ class Gateway {
       this.#created = true;
       return Promise.resolve(this);
     } catch (error) {
-      console.log("unable to create api: " + this.apiName);
+      console.log("Unable to create API gateway: " + this.apiName);
       throw new Error(error.message);
     }
   }
@@ -212,8 +215,8 @@ class Gateway {
     if (this.#integrations[functionName])
       return this.#integrations[functionName];
 
-    const lambdaRegion = "us-east-1";
-    const functionARN = `arn:aws:lambda:${lambdaRegion}:444510759772:function:${functionName}`;
+    let account = await token(this.region);
+    const functionARN = `arn:aws:lambda:${this.region}:${account}:function:${functionName}`;
     let integration;
     try {
       integration = await this.client.createIntegration({
@@ -298,11 +301,3 @@ class Gateway {
 }
 
 module.exports = Gateway;
-
-// const test = async () => {
-//   const api = new Gateway("testName");
-//   await api.update("dcxzfen2fd", ["arn:aws:lambda:us-east-1:444510759772:function:createNote:1"])
-
-// };
-
-// test();

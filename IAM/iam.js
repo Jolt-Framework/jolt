@@ -1,6 +1,6 @@
 const { IAM, CreateRoleCommand, AttachRolePolicyCommand, GetRoleCommand } = require("@aws-sdk/client-iam");
 const AWS = require("@aws-sdk/client-iam");
-const config = require("../Core/config.json");
+// const config = require("../Core/config.json");
 
 class IAMWrapper {
   static roles = {};
@@ -19,7 +19,7 @@ class IAMWrapper {
    * @returns {Promise<String>}
    */
   async createEdgeRole(edgeLambdaRoleName) {
-    edgeLambdaRoleName ||= "LambdaDamnde";
+    edgeLambdaRoleName = "LambdaDamnde";
     let role;
 
     try {

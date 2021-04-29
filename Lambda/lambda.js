@@ -9,10 +9,6 @@ const {
 } = require("@aws-sdk/client-lambda");
 const { version } = require("esbuild");
 const path = require('path');
-
-// For testing - Replace with IAM class import
-// const IAM = { LambdaRole: "arn:aws:iam::472111561985:role/s3BucketAccessForCreatingLambdas"};
-// const IAM = { LambdaRole: "arn:aws:iam::444510759772:role/autoLambdaExecutionRole" }
 const REGION = "us-east-1";
 
 /** For creating and working with Lambda Functions
@@ -73,7 +69,7 @@ class Lambda /*extends something?*/ {
       return Promise.resolve(result.FunctionArn);
     } catch (err) {
       try {
-        console.log(err.message, "updating...");
+        console.log(err.message + ". Updating function...");
         let params = {
           Publish: true,
           S3Bucket: this.S3Bucket,
@@ -84,6 +80,7 @@ class Lambda /*extends something?*/ {
         this.versioned = true;
         this.version = result.Version
         this.arn = result.FunctionArn
+        console.log(`${FunctionName} version: ${this.version}`)
         return Promise.resolve(result.FunctionArn);
       } catch (error) {
         console.log("unable to update the function's code, \n", error.message)
@@ -153,7 +150,7 @@ class Lambda /*extends something?*/ {
    * @param {array}
   */
   static async teardown(lambdaList) {
-    console.log("deleting lambdas");
+    console.log("Deleting lambdas...");
     for (let index = 0; index < lambdaList.length; index++) {
       let arn = lambdaList[index];
       let versionlessARN = arn.replace(/:\d+$/, "");
@@ -162,7 +159,7 @@ class Lambda /*extends something?*/ {
       await Lambda.#delete(arn);
     }
 
-    console.log("successfully deleted all lambdas");
+    console.log("Successfully deleted all lambdas");
 
     // lambdaList.forEach((lambda) => { // this refers to an arn
     //   console.log("deleting ",lambda)

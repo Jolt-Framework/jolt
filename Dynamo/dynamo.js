@@ -39,7 +39,7 @@ class Dynamo {
 
       await AWS.waitForTableExists({
         client: this.client,
-        maxWaitTime: 12,
+        maxWaitTime: 30,
       },
       {
         TableName: tableName,

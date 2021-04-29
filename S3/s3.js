@@ -18,7 +18,6 @@ const Mime = require('mime-types');
 class S3 {
   static Client = new S3Client({
     region: process.env.REGION || "us-east-1",
-
   });
 
   constructor(bucketName, deployment) {
@@ -31,7 +30,7 @@ class S3 {
     try {
       confirmation = await S3.Client.makePublic(key)
     } catch (error) {
-      console.log(`unable to make this bucket public`)
+      console.log(`Unable to make this bucket public`)
     }
 
     return Promise.resolve(confirmation)
@@ -58,7 +57,7 @@ class S3 {
         }
 
       } catch (error) {
-        throw new Error(`someone else has that bucket name or it's not accessible to you, error: ${error.message}`);
+        throw new Error(`The bucket name is already in use or it's not accessible to you, error: ${error.message}`);
       }
     } else {
       console.log("Bucket already exists.");
@@ -76,7 +75,7 @@ class S3 {
 
     try {
       const res = await S3.Client.send(new PutObjectCommand(objectParams));
-
+      console.log(`file: ${fileName} uploaded to S3`)
       const VersionId = res.VersionId;
       let Key = fileName;
       return {Key, VersionId};
@@ -86,23 +85,24 @@ class S3 {
   }
 
   static async teardown(Bucket, Objects) {
+    console.log("deleting bucket files")
     // given bucketName and an array of {fileName, version}
     if (Objects.length === 0) return;
     try {
        console.log(`marking current distribution objects for deletion`);
       for (const object of Objects) {
-          await this.Client.send(new DeleteObjectCommand({
-            Bucket,
-            ...object,
-          }));
-        }
-     
+        await this.Client.send(new DeleteObjectCommand({
+          Bucket,
+          ...object,
+        }));
+        console.log("deleted:", object.Key)
+      }
 
       console.log("Objects deleted");
-      
+
     } catch (error) {
       console.log("Deleting versioned objects failed with:\n", error.message);
-      this.teardownAll(bucketName);
+      this.teardownAll(Bucket);
     }
   }
 
@@ -125,7 +125,7 @@ class S3 {
             Bucket,
             ...object,
           }));
-          console.log(`${object.key} Marked for deletion`);
+          console.log(`${object.Key} Marked for deletion`);
         }
 
 

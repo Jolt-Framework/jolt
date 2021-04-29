@@ -1,0 +1,20 @@
+{
+  "projectInfo": {
+    "projectName": "new-project",
+    "projectId": "new-project-4w428bvx4u"
+  },
+  "buildInfo": {
+    "setupCommand": "npm install",
+    "buildCommand": "npm run build",
+    "functionsFolder": "functions",
+    "buildFolder": "build"
+  },
+  "AWSInfo": {
+    "AWS_REGION": "us-east-1",
+    "bucketName": "new-project-4w428bvx4u-bucket",
+    "tableName": "new-project-4w428bvx4u-table",
+    "apiName": "new-project-api",
+    "gatewayStage": "test",
+    "gatewayDescription": "test"
+  }
+}
