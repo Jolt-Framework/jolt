@@ -1,7 +1,7 @@
 {
   "projectInfo": {
-    "projectName": "demodemo",
-    "projectId": "demodemo-qs2n0lhaux"
+    "projectName": "my-project",
+    "projectId": "my-project-64o4pk9gb9"
   },
   "buildInfo": {
     "setupCommand": "npm install",
@@ -11,9 +11,9 @@
   },
   "AWSInfo": {
     "AWS_REGION": "us-east-1",
-    "bucketName": "demodemo-qs2n0lhaux-bucket",
-    "tableName": "demodemo-qs2n0lhaux-table",
-    "apiName": "demodemo-api",
+    "bucketName": "my-project-64o4pk9gb9-bucket",
+    "tableName": "my-project-64o4pk9gb9-table",
+    "apiName": "my-project-api",
     "gatewayStage": "test",
     "gatewayDescription": "test"
   }
