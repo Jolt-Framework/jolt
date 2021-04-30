@@ -1,7 +1,7 @@
 {
   "projectInfo": {
-    "projectName": "my-project",
-    "projectId": "my-project-64o4pk9gb9"
+    "projectName": "christian-test-notes-app",
+    "projectId": "christian-test-notes-app-tks9vdxenv"
   },
   "buildInfo": {
     "setupCommand": "npm install",
@@ -11,9 +11,9 @@
   },
   "AWSInfo": {
     "AWS_REGION": "us-east-1",
-    "bucketName": "my-project-64o4pk9gb9-bucket",
-    "tableName": "my-project-64o4pk9gb9-table",
-    "apiName": "my-project-api",
+    "bucketName": "christian-test-notes-app-tks9vdxenv-bucket",
+    "tableName": "christian-test-notes-app-tks9vdxenv-table",
+    "apiName": "christian-test-notes-app-api",
     "gatewayStage": "test",
     "gatewayDescription": "test"
   }

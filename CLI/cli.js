@@ -38,6 +38,7 @@ program
   .alias("s")
   .description("Send all environment variables (found in .env files) to associated Lambdas")
   .action(secrets);
+
 // // Destroy
 // program
 //   .command("destroy")
