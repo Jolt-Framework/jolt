@@ -12,7 +12,7 @@ const { lambdaFileToName, lambdaARNToName } = require("../Utilities/textConverte
 const deployAllSecrets = async (functionsFolderPath, tableName, region) => {
   const lambdas = await loadLambdaNames(tableName, region);
   const functions = await listFunctions(functionsFolderPath);
-
+  console.log(lambdas, functions);
   if (allFunctionsDeployed(lambdas, functions)) {
     functions.forEach(async func => {
 			const funcPath = func.mainFile;

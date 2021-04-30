@@ -11,25 +11,6 @@ let config;
 const getConfig = () => require(process.env.PWD + "/config.json");
 // const { bucket: bucketName, buildCommand, region } = config.deploy;
 // const { tableName, projectName } = config;
-// {
-//   "projectInfo": {
-//     "projectName": "my-test-project2",
-//     "projectId": "my-test-project2-2jzp474qxz"
-//   },
-//   "buildInfo": {
-//     "setupCommand": "npm install",
-//     "buildCommand": "npm run build",
-//     "functionsFolder": "functions",
-//     "buildFolder": "build"
-//   },
-//   "AWSInfo": {
-//     "AWS_REGION": "us-east-1",
-//     "bucketName": "my-test-project2-2jzp474qxz-bucket",
-//     "apiName": "my-test-project2-api",
-//     "gatewayStage": "test",
-//     "gatewayDescription": "test"
-//   }
-// }
 
 const buildProcess = async () => {
   if (!config) config = getConfig();
@@ -60,7 +41,7 @@ const deploymentProcess = async (deployment) => {
   CORE.deployment = deployment;
 
   const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket);
-
+  
   await CORE.deployStaticAssets(bucket);
 
   const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);

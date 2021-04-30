@@ -6,7 +6,12 @@ const lambdaFileToName = (text) => {
 
 const lambdaARNToName = (text) => {
 	const sections = text.split(":");
-	return sections[sections.length - 1];
+	const lastSection = sections[sections.length - 1];
+	if (String(Number(lastSection)) === lastSection) {
+		return sections[sections.length - 2];
+	} else {
+		return lastSection;
+	}
 }
 
 module.exports = { lambdaFileToName, lambdaARNToName };
