@@ -6,6 +6,7 @@ const walkDirs = require("../Utilities/walkDirs");
 const fs = require("fs");
 const Zip = require("adm-zip");
 const path = require("path");
+const dotenv = require("dotenv");
 // const config = require("./config.json");
 const { zipFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
 const uniqueId = require("../Utilities/nanoid");
@@ -120,14 +121,21 @@ class CORE {
     const funcPath = `archives/${func}`;
     // console.log("funcName is ", funcName)
     // console.log("funcPath is ", funcPath)
-
+    const fetchLocalSecrets = (funcPath, funcName) => {
+      const envPath = path.dirname(funcPath) + "/.env";
+      if (fs.existsSync(envPath)) {
+        return dotenv.parse(fs.readFileSync(envPath));
+      } else {
+        console.log(`No .env file found for function: ${funcName}`);
+      }
+    }
+    let functionsFolder = this.config.buildInfo.functionsFolder;
+    let secrets = fetchLocalSecrets(functionsFolder + "/" + func.replace("-", "/"))
     let zippedFileBuffer = fs.readFileSync(funcPath);
 
     await bucket.uploadObject(zippedFileBuffer, funcPath);
 
     const lambda = new Lambda(bucket.bucketName, funcPath);
-
-    let secrets = null;
 
     let arn = await lambda.create(lambdaRole, secrets);
     this.deployment.lambdas.push(arn);
