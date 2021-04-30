@@ -34,10 +34,10 @@ const userPrompts = async () => {
     {
       type: "text",
       name: "projectName",
-      message: `Enter a name for your project (all lowercase letters):`,
+      message: `Enter a name for your project (5+ characters, only lowercase letters, numbers, and dashes (-)):`,
       initial: "my-project",
       validate: (cmd) =>
-      cmd.trim().length < 5 || cmd != cmd.toLowerCase() ? "Project names must be 5 or more characters and lowercase" : true,
+      cmd.trim().length < 5 || cmd.match(/[^a-z0-9\-]/g) ? "Project names must be 5 or more characters, only lowercase letters, numbers, and dashes (-)" : true,
     },
     {
       type: "text",
