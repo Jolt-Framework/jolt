@@ -47,7 +47,7 @@ class Lambda /*extends something?*/ {
    * @param {String} role the ARN of the lambda Role
    * @return {Promise<String>} The arn of the newly created Lambda
    */
-  async create(role) {
+  async create(role, secrets) {
     const FunctionName = path.basename(this.S3Key, ".zip");
 
     const lambdaParams = {
@@ -61,6 +61,15 @@ class Lambda /*extends something?*/ {
       Role: role,
       Runtime: "nodejs12.x",
     };
+
+    if (secrets) {
+      lambdaParams.Environment = {
+        Variables: {
+          ...secrets
+        }
+      };
+    }
+
     let result;
     try {
       result = await Lambda.Client.send(new CreateFunctionCommand(lambdaParams));

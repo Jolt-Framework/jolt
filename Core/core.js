@@ -30,8 +30,8 @@ class CORE {
   }
 
   /**
-   *  
-   * 
+   *
+   *
    */
 
   // static async updateLambdasAndGateway(bucket, api) {
@@ -89,7 +89,7 @@ class CORE {
 
     const iam = new Iam(AWS_REGION);
     const lambdaRole = await iam.createLambdaRole();
-    
+
     console.log('Creating functions and API gateway...');
 
     // gets all functions from functions folder and zips them into an 'archives' folder
@@ -127,7 +127,9 @@ class CORE {
 
     const lambda = new Lambda(bucket.bucketName, funcPath);
 
-    let arn = await lambda.create(lambdaRole);
+    let secrets = null;
+
+    let arn = await lambda.create(lambdaRole, secrets);
     this.deployment.lambdas.push(arn);
     // **TODO**: should be able to configure the method for each lambda
     const methods = [
@@ -295,9 +297,9 @@ class CORE {
     let distribution = await cf.invalidateDistribution(distributionId);
     return Promise.resolve(distribution);
   }
-  
+
   // may be used later - don't delete yet
-  // static async updateCors(domainName) { 
+  // static async updateCors(domainName) {
   //   try {
   //     await this.api.updateCors(domainName);
   //     console.log("successfully updated cors");
