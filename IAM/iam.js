@@ -18,10 +18,8 @@ class IAMWrapper {
    * @param {String} roleName
    * @returns {Promise<String>}
    */
-  async createEdgeRole(edgeLambdaRoleName) {
-    edgeLambdaRoleName = "LambdaDamnde";
+  async createEdgeRole(edgeLambdaRoleName = "roley-poley") {
     let role;
-
     try {
       role = await this.client.send(new GetRoleCommand({
         RoleName: edgeLambdaRoleName,
@@ -31,7 +29,6 @@ class IAMWrapper {
       return Promise.resolve(role.Role.Arn);
     } catch (_) {
       console.log("Creating role: " + edgeLambdaRoleName);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
 
     try {
@@ -67,6 +64,7 @@ class IAMWrapper {
       console.log("Error attaching policy to role:\n", error);
       throw new Error(error.message);
     }
+    await new Promise((resolve) => setTimeout(resolve, 10000));
 
     return Promise.resolve(role.Role.Arn);
   }
@@ -97,7 +95,6 @@ class IAMWrapper {
       return Promise.resolve(role.Role.Arn);
     } catch (_) {
       console.log("Creating role: " + roleName);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
 
     try {
@@ -132,6 +129,8 @@ class IAMWrapper {
       console.log(err);
       throw new Error(err.message);
     }
+
+    await new Promise(resolve => setTimeout(resolve, 10000));
 
     return Promise.resolve(role.Role.Arn);
   }

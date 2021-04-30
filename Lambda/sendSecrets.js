@@ -12,16 +12,15 @@ const { lambdaFileToName, lambdaARNToName } = require("../Utilities/textConverte
 const deployAllSecrets = async (functionsFolderPath, tableName, region) => {
   const lambdas = await loadLambdaNames(tableName, region);
   const functions = await listFunctions(functionsFolderPath);
-  console.log(lambdas, functions);
-  if (allFunctionsDeployed(lambdas, functions)) {
-    functions.forEach(async func => {
+  if (allFunctionsDeployed(lambdas.map(lambdaARNToName), functions)) {
+    functions.forEach(async (func, i) => {
 			const funcPath = func.mainFile;
 			const funcName = lambdaFileToName(funcPath);
 
       const secrets = fetchLocalSecrets(funcPath, funcName);
       if (secrets) {
         try {
-          await send(secrets, funcName);
+          await send(secrets, lambdas[i]);
           console.log(`secrets sent to ${funcName}`);
         } catch (err) {
           console.log(`an error occurred while sending secrets to ${funcName}:\n${err}`);
@@ -34,6 +33,7 @@ const deployAllSecrets = async (functionsFolderPath, tableName, region) => {
 }
 
 const send = async (secrets, funcName) => {
+  console.log(funcName);
   const params = {
     FunctionName: funcName,
     Environment: {
@@ -51,8 +51,8 @@ const loadLambdaNames = async (tableName, region) => {
   const db = new Dynamo(region);
 
   const tableItems = await db.getItems(tableName);
-  const lambdaARNs = tableItems[0].config.lambdas;
-  return lambdaARNs.map(lambdaARNToName);
+  const lambdaARNs = tableItems[tableItems.length-1].config.lambdas;
+  return lambdaARNs//.map(lambdaARNToName);
 }
 
 const fetchLocalSecrets = (funcPath, funcName) => {
