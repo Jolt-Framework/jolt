@@ -1,7 +1,8 @@
 const faunadb = require("faunadb");
 const q = faunadb.query;
 
-exports.handler = async (event, _context, callback) => {
+exports.handler = (event, _context, callback) => {
+  console.log("HI");
   try {
     event = JSON.parse(event);
   } catch (error) {
@@ -20,7 +21,7 @@ exports.handler = async (event, _context, callback) => {
 
     const info = await client.query(somethingElse);
     const docRefs = info.map(({data, ref}) => { return {...data, id: ref.id}});
-    return callback(null, {statusCode: 201, body: JSON.stringify({ notes: docRefs}, null, 1) });
+    return {statusCode: 201, body: JSON.stringify({ notes: docRefs}, null, 1) };
   } catch (error) {
     console.log(error.message);
   }
