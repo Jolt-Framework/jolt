@@ -97,7 +97,7 @@ class Dynamo {
         result[key] = value
       }
     }
-    return result;
+    return { ...result, ...result.config };
   }
 
   formatStrings(items) {
@@ -148,10 +148,13 @@ class Dynamo {
 // timestamp: { S: '1619556774238' },
   async getItems(tableName) {
     let item;
+    const criteria = (a, b) =>
+    Number(a.timeCreated) - Number(b.timeCreated) > 0
     try {
       const {Items} = await this.client.scan({
         TableName: tableName,
       });
+      Items.sort(criteria);
       return Promise.resolve(Items.map(item => this.deformat(item)));
     } catch (e) {
       // console.log(e)
