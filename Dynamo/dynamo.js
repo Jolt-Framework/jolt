@@ -158,6 +158,7 @@ class Dynamo {
     let { apiId } = deployments[0].config.api;
     return apiId
   }
+
   async getNextVersionNumber(tableName) {
     const deployments = await this.getDeployments(tableName);
 
