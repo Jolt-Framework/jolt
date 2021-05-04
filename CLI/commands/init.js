@@ -18,7 +18,7 @@ const setupLambdaTestProxying = () => {
     console.log("package.json not found in project. You currently aren't configured to proxy requests to Local Lambdas")
   }
 
-  packJSON.proxy = "3001";
+  packJSON.proxy = "http://localhost:3001";
 
   fs.writeFileSync("package.json", JSON.stringify(packJSON, null, 2));
 }

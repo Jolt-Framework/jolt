@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const URL_API_GATEWAY = ".functions";
+const URL_API_GATEWAY = "/.functions";
 
 export const getNotes = (callback) => {
   // axios.get(URL_API_GATEWAY + '/getnotes')

@@ -7,7 +7,7 @@ const fs = require("fs");
 const Zip = require("adm-zip");
 const path = require("path");
 // const config = require("./config.json");
-const { zipFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
+const { zipFunctions, listFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
 const uniqueId = require("../Utilities/nanoid");
 
 class CORE {
@@ -93,11 +93,20 @@ class CORE {
     console.log('Creating functions and API gateway...');
 
     // gets all functions from functions folder and zips them into an 'archives' folder
+    const functionList = await listFunctions(functionPath);
+
+    console.log(functionsList)
+
+//     console.log(functionList)
+//     functionList.reduce((funcMap, func) => {
+//       funcMap[func.name] = func.path;
+//     }, {})
+
     await zipFunctions(functionsFolder, "archives");
     const zippedFunctions = fs.readdirSync("archives");
 
     for (const func of zippedFunctions) {
-      await CORE.sendLambdaToBucket(func, bucket, lambdaRole);
+      await CORE.deployLambda(func, bucket, lambdaRole);
     }
 
     await this.api.createStage(gatewayStage);
@@ -115,11 +124,18 @@ class CORE {
    *   @param {LambdaRole} lambdaRole the lambda role
    */
 
-  static async sendLambdaToBucket(func, bucket, lambdaRole) {
+  static fetchLocalSecrets (funcPath, funcName) {
+    const envPath = path.dirname(funcPath) + "/.env";
+    if (fs.existsSync(envPath)) {
+      return dotenv.parse(fs.readFileSync(envPath));
+    } else {
+      console.log(`No .env file found for function: ${funcName}`);
+    }
+  }
+
+  static async deployLambda(func, bucket, lambdaRole) {
     const funcName = path.basename(func, ".zip");
     const funcPath = `archives/${func}`;
-    // console.log("funcName is ", funcName)
-    // console.log("funcPath is ", funcPath)
 
     let zippedFileBuffer = fs.readFileSync(funcPath);
 
@@ -128,6 +144,8 @@ class CORE {
     const lambda = new Lambda(bucket.bucketName, funcPath);
 
     let secrets = null;
+
+    fetchLocalSecrets(funcName)
 
     let arn = await lambda.create(lambdaRole, secrets);
     this.deployment.lambdas.push(arn);

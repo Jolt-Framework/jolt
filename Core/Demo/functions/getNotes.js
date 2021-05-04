@@ -2,14 +2,14 @@ const faunadb = require("faunadb");
 const q = faunadb.query;
 
 exports.handler = async (event, _context, callback) => {
-  console.log("HI");
   try {
     event = JSON.parse(event.body);
   } catch (error) {
     event = event.body;
   }
+
   const client = new faunadb.Client({
-    secret: process.env.FAUNA_DB_SECRET_KEY,
+    secret: "fnAEF427OEACACbf49t6UGoWeJ54LKYxzE8P--I0"
   });
 
   try {
@@ -21,7 +21,8 @@ exports.handler = async (event, _context, callback) => {
 
     const info = await client.query(somethingElse);
     const docRefs = info.map(({data, ref}) => { return {...data, id: ref.id}});
-    return callback(null, {statusCode: 201, body: JSON.stringify({ notes: docRefs}, null, 1) });
+
+    return {statusCode: 200, body: JSON.stringify({ notes: docRefs})};
   } catch (error) {
     callback(error.message);
   }

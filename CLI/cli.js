@@ -5,6 +5,8 @@ const init = require('./commands/init');
 // const { help } = require("./commands/help");
 const deploy = require("./commands/deploy");
 const secrets = require("./commands/secrets");
+const loclam = require("./commands/loclam");
+const newlam = require("./commands/newlam");
 // const { destroy } = require("./commands/destroy");
 
 const program = new Command();
@@ -32,12 +34,24 @@ program
   .description("Provision AWS infrastucture, build your application and deploy everything to AWS")
   .action(deploy);
 
-// Init
+// Secrets
 program
   .command("secrets")
   .alias("s")
   .description("Send all environment variables (found in .env files) to associated Lambdas")
   .action(secrets);
+
+program
+  .command("loclam")
+  .alias("ll")
+  .description("Run Lambdas locally for testing")
+  .action(loclam);
+
+program
+  .command("newlam")
+  .alias("nl")
+  .description("Generate a new lambda function handler in your functions folder")
+  .action(newlam);
 
 // // Destroy
 // program
