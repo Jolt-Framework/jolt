@@ -36,7 +36,7 @@ class Dynamo {
         Tags: [
           {
             Key: "Core-Project",
-            Value: undefined,
+            Value: "",
           },
         ],
       })
