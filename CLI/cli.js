@@ -7,7 +7,7 @@ const deploy = require("./commands/deploy");
 const update = require("./commands/update");
 const secrets = require("./commands/secrets");
 // const { destroy } = require("./commands/destroy");
-
+const projects = () => {};
 const program = new Command();
 // const version = require("../package.json").version;
 // program.version(version).description("COREpack");
@@ -45,6 +45,11 @@ program
   .description("Send all environment variables (found in .env files) to associated Lambdas")
   .action(secrets);
 
+program
+  .command("projects")
+  .alias("p")
+  .description("List projects and make changes.")
+  .action(projects);
 // // Destroy
 // program
 //   .command("destroy")

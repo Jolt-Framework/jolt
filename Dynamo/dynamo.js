@@ -32,7 +32,13 @@ class Dynamo {
             AttributeType: 'S',
           },
         ],
-        BillingMode: "PAY_PER_REQUEST"
+        BillingMode: "PAY_PER_REQUEST",
+        Tags: [
+          {
+            Key: "Core-Project",
+            Value: "",
+          },
+        ],
       })
       this.table = res
 
