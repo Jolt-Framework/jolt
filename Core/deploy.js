@@ -41,7 +41,7 @@ const deploymentProcess = async (deployment) => {
   CORE.deployment = deployment;
 
   const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket);
-  
+
   await CORE.deployStaticAssets(bucket);
 
   const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
@@ -63,14 +63,14 @@ const sendToDB = async (deployment) => {
   console.log("Sending deployment info to the DynamoDB");
   let db = new Dynamo();
   await db.createTable(deployment.tableName)
-  await db.addItemsToTable(deployment.tableName, deployment)
+  await db.addDeploymentToTable(deployment.tableName, deployment)
   console.log("Deployment successfully recorded in DynamoDB");
 }
 
 
 let torn;// kept here so it's clear where it's changed
 const teardown = async (message, error, deployment) => {
-  try { 
+  try {
     console.log(message, error.message);
     console.log("initiating teardown... ");
     let teardown = new Teardown(deployment);
@@ -82,15 +82,23 @@ const teardown = async (message, error, deployment) => {
   }
 }
 
-const createDeploymentTemplate = () => {
+const createDeploymentTemplate = async () => {
+
+
+
   if (!config) config = getConfig();
   const { projectId: tableName, projectName } = config.projectInfo;
+
+  let db = new Dynamo();
+  let version = await db.getNextVersionNumber(tableName);
+
   return ({
     tableName,
     projectName,
     files: [],
     lambdas: [],
-    edgeLambdas: []
+    edgeLambdas: [],
+    version,
   })
 };
 
@@ -102,7 +110,7 @@ const run = async () => {
     return console.log("unable to build the project, error: ", error.message)
   }
 
-  const deployment = createDeploymentTemplate();
+  const deployment = await createDeploymentTemplate();
   try {
     await deploymentProcess(deployment);
   } catch (error) {

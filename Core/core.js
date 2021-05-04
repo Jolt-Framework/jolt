@@ -22,6 +22,16 @@ class CORE {
     CORE.#deployment = deployment;
   }
 
+  static #config;
+
+  static get config() {
+    return CORE.#config;
+  }
+
+  static set config(config) {
+    CORE.#config = config;
+  }
+
   static toFuncName(path) {
     return path.split("/").slice(1).join("/").split(".").slice(0, -1).join(".");
   }
@@ -34,40 +44,49 @@ class CORE {
    *
    *
    */
+  static async updateProxy(cloudfrontId, proxyArn) {
+    let cloudfront = new CloudFrontWrapper(this.config.region);
+    let res = await cloudfront.updateEdgeLambda(cloudfrontId, proxyArn);
+    return res;
+  }
 
-  // static async updateLambdasAndGateway(bucket, api) {
-  //   const { apiId, apiName } = api;
-  //   const { functionsFolder, gatewayStage} = config.core;
+  static async updateLambdasAndGateway(bucket, dataForUpdate) {
+    const { buildInfo, AWSInfo } = this.config;
+    const {
+      AWS_REGION,
+      apiName,
+      gatewayStage,
+      gatewayDescription,
+    } = AWSInfo;
 
-  //   const iam = new Iam();
-  //   const lambdaRole = await iam.createLambdaRole();
+    const version = this.#deployment.version;
+    const { functionsFolder } = buildInfo;
 
-  //   await walkDirs(functionsFolder, async (path) => {
-  //     const funcName = this.toFuncName(path);
-  //     await zipFunction(path, "archives");
+    let api = new Gateway(apiName, AWS_REGION, version);
+    this.api = api;
+    api.apiId = dataForUpdate.apiId;
 
-  //     let zippedFileBuffer = fs.readFileSync(
-  //       path.replace("functions", "archives").replace(".js", ".zip")
-  //     );
+    const iam = new Iam(AWS_REGION);
+    const lambdaRole = await iam.createLambdaRole();
+    await api.clearRoutes();
+    console.log('Creating functions and API gateway...');
 
-  //     await bucket.uploadObject(
-  //       zippedFileBuffer,
-  //       this.toFileName(funcName, ".zip")
-  //     );
+    // gets all functions from functions folder and zips them into an 'archives' folder
+    await zipFunctions(functionsFolder, "archives");
+    const zippedFunctions = fs.readdirSync("archives");
 
-  //     const lambda = new Lambda(
-  //       bucket.bucketName,
-  //       this.toFileName(funcName, ".zip")
-  //     );
+    for (const func of zippedFunctions) {
+      await CORE.sendLambdaToBucket(func, bucket, lambdaRole);
+    }
 
-  //     let arn = await lambda.create(lambdaRole);
-  //     CORE.#deployment.lambdas.push(arn);
-  //   });
+    await this.api.createStage(version);
+    await this.api.deploy(version, gatewayDescription);
 
-  //   let gateway = new Gateway(apiName, gatewayStage)
-  //   let res = await gateway.update(apiId);
-  //   return Promise.resolve(res);
-  // }
+    return Promise.resolve({
+      gatewayUrl:
+        `https://${this.api.apiId}.execute-api.${AWS_REGION}.amazonaws.com/${version}`
+    });
+  }
 
   /**
    *   @param {S3Object} bucket the bucket client created by new S3
@@ -82,9 +101,11 @@ class CORE {
       gatewayStage,
       gatewayDescription,
     } = AWSInfo;
+
+    const version = this.#deployment.version;
     const { functionsFolder } = buildInfo;
 
-    this.api = new Gateway(apiName, AWS_REGION, gatewayStage);
+    this.api = new Gateway(apiName, AWS_REGION, version);
     await this.api.create();
     CORE.#deployment.api = this.api;
 
@@ -101,12 +122,12 @@ class CORE {
       await CORE.sendLambdaToBucket(func, bucket, lambdaRole);
     }
 
-    await this.api.createStage(gatewayStage);
-    await this.api.deploy(gatewayStage, gatewayDescription);
+    await this.api.createStage(version);
+    await this.api.deploy(version, gatewayDescription);
 
     return Promise.resolve({
       gatewayUrl:
-        `https://${this.api.apiId}.execute-api.${AWS_REGION}.amazonaws.com/${gatewayStage}`
+        `https://${this.api.apiId}.execute-api.${AWS_REGION}.amazonaws.com/${version}`
     });
   }
 
@@ -279,7 +300,6 @@ class CORE {
   }
 
   // /**
-  //  *
   //  * @param {string} bucket the bucket that will act as the origin
   //  * @param {string} ProxyArn the arn for the edge lambda
   //  * @param {string} callerReference a caller reference for the distribution

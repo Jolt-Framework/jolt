@@ -128,18 +128,30 @@ class Gateway {
     } catch (error) {
       throw new Error(error.message);
     }
-
     this.#routes = routes.Items;
+    return routes;
   }
 
   async #getIntegrations() {
-    let integrations =  await this.client.getIntegrations({
+    let integrations = await this.client.getIntegrations({
       ApiId: this.apiId,
     });
 
     return integrations.Items;
   }
 
+  async clearRoutes() {
+    let routes = await this.#getRoutes();
+    for (const route of this.#routes) {
+      let a = await this.client.deleteRoute({
+        ApiId: this.apiId,
+        RouteId: route.RouteId,
+      });
+    }
+    this.#routes = [];
+  }
+
+  // WARNING: Deprecated
   async update(apiId, lambdas) { //arns of the previous deployment.
     this.apiId = apiId;
     // get the routes for the api.
@@ -161,7 +173,6 @@ class Gateway {
     }
 
     await this.deploy(this.stageName, `updated integrations for ${JSON.stringify(lambdas)}`);
-
   }
 
   /**
