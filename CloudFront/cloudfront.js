@@ -29,7 +29,28 @@ class CloudFrontWrapper {
     }
   }
 
+  async updateEdgeLambda(cloudfrontId, proxyARN) {
+    const { ETag, DistributionConfig } = await this.getDistribution(cloudfrontId);
 
+    DistributionConfig.CacheBehaviors.Items[0].LambdaFunctionAssociations.Items[0].LambdaFunctionARN = proxyARN;
+
+    const dist = await this.client.updateDistribution(
+      {
+        Id: cloudfrontId,
+        IfMatch: ETag,
+        DistributionConfig,
+      }
+    );
+
+    let res = await AWS.waitForDistributionDeployed({
+      client: this.client,
+      maxWaitTime: 300
+    }, {
+      Id: cloudfrontId,
+    })
+
+    return Promise.resolve(res)
+  }
   async getDistribution(id) {
     try {
       const { ETag, Distribution } = await this.client.getDistribution({ Id: id })

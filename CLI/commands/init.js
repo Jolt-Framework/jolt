@@ -1,8 +1,6 @@
 const { execSync } = require('child_process');
 const prompts = require("prompts");
 const fs = require("fs");
-// const { v4 } = require("uuid");
-// const { customAlphabet } = require("nanoid");
 const uniqueId = require('../../Utilities/nanoid');
 const { writeFileSync } = require("fs");
 
@@ -76,8 +74,8 @@ const userPrompts = async () => {
       name: "AWS_REGION",
       message: "Please enter a valid AWS region (e.g us-east-1)",
       initial: "us-east-1",
-      validate: (cmd) => 
-      cmd.match(/^[a-z]+-[a-z]+-[0-9]+$/g) ? true : "Invalid AWS region",
+      validate: (cmd) =>
+      cmd.match(/^(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\d$/g) ? true : "Invalid AWS region",
     },
     // {
     //   type: "password",
@@ -114,11 +112,11 @@ const userPrompts = async () => {
 
 const formatForConfig = (results) => {
   const {
-    projectName, 
-    setupCommand, 
-    buildCommand, 
-    functionsFolder, 
-    buildFolder, 
+    projectName,
+    setupCommand,
+    buildCommand,
+    functionsFolder,
+    buildFolder,
     AWS_REGION,
   } = results;
 
@@ -130,18 +128,18 @@ const formatForConfig = (results) => {
       projectId
     },
     buildInfo: {
-      setupCommand, 
-      buildCommand, 
-      functionsFolder, 
-      buildFolder, 
+      setupCommand,
+      buildCommand,
+      functionsFolder,
+      buildFolder,
     },
     AWSInfo: {
       AWS_REGION,
       bucketName: projectId + "-bucket".toLowerCase(),
       tableName: projectId + "-table".toLowerCase(),
       apiName: projectName + "-api",
-      gatewayStage: "test",
-      gatewayDescription: "test"
+      // gatewayStage: "test",
+      // gatewayDescription: "test"
     }
   }
 }

@@ -4,6 +4,7 @@ const { Command } = require('commander');
 const init = require('./commands/init');
 // const { help } = require("./commands/help");
 const deploy = require("./commands/deploy");
+const update = require("./commands/update");
 const secrets = require("./commands/secrets");
 // const { destroy } = require("./commands/destroy");
 
@@ -32,6 +33,11 @@ program
   .description("Provision AWS infrastucture, build your application and deploy everything to AWS")
   .action(deploy);
 
+program
+  .command("update")
+  .alias("u")
+  .description("Update an existing deployment with your current codebase")
+  .action(update);
 // Init
 program
   .command("secrets")
