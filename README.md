@@ -20,7 +20,6 @@ Todo: Ezra and Rodney
   - updating the distribution
   - new entry in dynamo table
 
-
   - Update API integrations for new version of lambda
   - Teardown if we have one version in a lambda completely delete, otherwise delete the version.
 ~~~
