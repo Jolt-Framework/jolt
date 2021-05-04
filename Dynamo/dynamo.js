@@ -178,6 +178,7 @@ class Dynamo {
     }
   }
 
+
   async addDeploymentToTable(tableName, items) {
     try {
       let confirmation = await this.client.putItem({
