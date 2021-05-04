@@ -1,7 +1,7 @@
 {
   "projectInfo": {
-    "projectName": "my-project",
-    "projectId": "my-project-57f2amysub"
+    "projectName": "tests",
+    "projectId": "tests-lrhr3rzejp"
   },
   "buildInfo": {
     "setupCommand": "npm install",
@@ -11,10 +11,8 @@
   },
   "AWSInfo": {
     "AWS_REGION": "us-east-1",
-    "bucketName": "my-project-57f2amysub-bucket",
-    "tableName": "my-project-57f2amysub-table",
-    "apiName": "my-project-api",
-    "gatewayStage": "test",
-    "gatewayDescription": "test"
+    "bucketName": "tests-lrhr3rzejp-bucket",
+    "tableName": "tests-lrhr3rzejp-table",
+    "apiName": "tests-api"
   }
 }
