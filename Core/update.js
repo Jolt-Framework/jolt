@@ -1,4 +1,3 @@
-const config = require("./config.json");
 const S3 = require("../S3/s3");
 const CORE = require("./core");
 const Builder = require("../Utilities/builder");
@@ -6,69 +5,101 @@ const uuid = require("uuid");
 const Teardown = require('../Teardown/teardown')
 const Dynamo = require('../Dynamo/dynamo');
 const Gateway = require("../APIGateway/gateway");
-const { bucket: bucketName, buildCommand, region} = config.deploy;
-const { tableName, projectName, cloudfrontId  } = config;
+let db = new Dynamo();
 
+const getConfig = () => require(process.env.PWD + "/config.json");
 
 // TODO get from config
 // const gatewayStage = "test";
+const createDeploymentTemplate = async (config) => {
+  if (!config) config = getConfig();
+  const { projectId: tableName, projectName } = config.projectInfo;
 
-let deployment = {
-  tableName,
-  projectName,
-  lambdas: [],
-  edgeLambdas: []
+  let version = await db.getNextVersionNumber(tableName);
+
+  return ({
+    tableName,
+    projectName,
+    files: [],
+    lambdas: [],
+    edgeLambdas: [],
+    version,
+  })
 };
-let db = new Dynamo();
 
-const getMostRecentDist = async (tableName) => {
-  let distributions = await db.getItems(tableName);
-  console.log(distributions)
-  distributions = distributions.filter(dist => dist.projectName === projectName)
-  if (distributions.length === 0)
-    throw new Error(
-      `cannot update this distribution, try creating a distribution with the project name ${projectName} first, run core deploy from the cli`
-    );
-  const criteria = (a, b) =>
-    Number(a.timeCreated) - Number(b.timeCreated) > 0 ? a : b;
-  return distributions.reduce(criteria, []);
-}
-const run = async () => {
-  try {
-    console.log("Building started");
 
-    const builder = new Builder(buildCommand);
-    await builder.build();
-    // REMOVE THIS LATER
-    const builder2 = new Builder("cd Demo && mv -r build ../");
-    await builder2.build();
-    // END REMOVE THIS LATER
-    console.log("Build completed!");
-  } catch (error) {
-    console.log("Failed to complete build process");
-    // console.log(error.message);
-    throw new Error(error.message);
+const getUpdateData = async (config) => {
+  // table: Project name(PK) || version(SK)
+  const { projectId } = config.projectInfo;
+  const {region} = config.AWSInfo
+  let db = new Dynamo(region);
+
+  const deployments = await db.getDeployments(projectId);
+
+  let deployment = deployments[0];
+  const {edgeLambdas, api, bucket, cloudfrontId} = deployment
+  let dataForUpdate = {
+    cloudfrontId: cloudfrontId,
+    s3: bucket, // bucket name
+    apiId: api.apiId,
+    proxyARN: edgeLambdas[0]
   }
+  return dataForUpdate;
+}
+
+const deployUpdate = async () => {
+
+  const config = getConfig();
+  const deployment = await createDeploymentTemplate(config);
+  CORE.deployment = deployment;
+  CORE.config = config;
+  // try {
+  //   console.log("Building started");
+
+  //   const builder = new Builder(config.buildInfo.buildCommand);
+  //   await builder.build();
+  //   // REMOVE THIS LATER
+  //   const builder2 = new Builder("cd Demo && mv -r build ../");
+  //   await builder2.build();
+  //   // END REMOVE THIS LATER
+  //   console.log("Build completed!");
+  // } catch (error) {
+  //   console.log("Failed to complete build process");
+  //   // console.log(error.message);
+  //   throw new Error(error.message);
+  // }
 
   let torn = false
   deployment.deployed = false;
-  const previousDistribution = await getMostRecentDist(tableName)
+  const updateData = await getUpdateData(config);
 
 
 
   try {
+    const bucketName = config.AWSInfo.bucketName;
+    const region = config.AWSInfo.AWS_REGION;
     const ref = "CORE-Jamstack:" + uuid.v4();
     const bucket = new S3(bucketName);
     deployment.region = region;
     deployment.bucket = bucketName;
-    const res = await CORE.updateLambdasAndGateway(bucket, previousDistribution.api);
+    console.log("trying to update ")
+
+    let api = new Gateway(config.AWSInfo.apiName, region, deployment.version);
+    api.apiId = updateData.apiId;
+    console.log(api.apiId);
+    await api.clearRoutes();
+    await new Promise(resolve => setTimeout(resolve, 10000));
+    const gatewayUrl = await CORE.updateLambdasAndGateway(bucket, updateData);
 
     await CORE.deployStaticAssets(bucket);
 
-    const cloudfrontRes = await CORE.invalidateDistribution(cloudfrontId);
+    const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
+    // const cloudfrontRes = await CORE.invalidateDistribution(cloudfrontId);
 
-    deployment.cloudfrontId = cloudfrontId
-    console.log("Successfully deployed application find it here:\n", domainName);
+    CORE.updateProxy(updateData.cloudfrontId, proxyArn);
+
+    deployment.cloudfrontId = updateData.cloudfrontId;
+
     deployment.deployed = true;
 
   } catch (error) {
@@ -86,18 +117,20 @@ const run = async () => {
     await teardown.all();
   } else if (deployment.deployed) {
     await db.createTable(deployment.tableName)
-    await db.addItemsToTable(deployment.tableName, deployment)
+    await db.addDeploymentToTable(deployment.tableName, deployment)
   }
 
   console.log("the deployment: ", deployment);
 
   // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist
 };
-const ans = async () => {
-  const dist = await getMostRecentDist(tableName)
-  console.log(dist)
+// const ans = async () => {
+//   const dist = await getMostRecentDist(tableName)
+//   console.log(dist)
 
-}
+// }
 // run();
 
-ans()
+module.exports = deployUpdate;
+
+// ans()

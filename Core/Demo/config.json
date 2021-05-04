@@ -1,0 +1,18 @@
+{
+  "projectInfo": {
+    "projectName": "core-demo",
+    "projectId": "core-demo-iu1gn7fr5r"
+  },
+  "buildInfo": {
+    "setupCommand": "npm install",
+    "buildCommand": "npm run build",
+    "functionsFolder": "functions",
+    "buildFolder": "build"
+  },
+  "AWSInfo": {
+    "AWS_REGION": "us-east-1",
+    "bucketName": "core-demo-iu1gn7fr5r-bucket",
+    "tableName": "core-demo-iu1gn7fr5r-table",
+    "apiName": "core-demo-api"
+  }
+}

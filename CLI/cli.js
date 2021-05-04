@@ -4,11 +4,12 @@ const { Command } = require('commander');
 const init = require('./commands/init');
 // const { help } = require("./commands/help");
 const deploy = require("./commands/deploy");
+const update = require("./commands/update");
 const secrets = require("./commands/secrets");
 const loclam = require("./commands/loclam");
 const newlam = require("./commands/newlam");
 // const { destroy } = require("./commands/destroy");
-
+const projects = () => {};
 const program = new Command();
 // const version = require("../package.json").version;
 // program.version(version).description("COREpack");
@@ -34,6 +35,12 @@ program
   .description("Provision AWS infrastucture, build your application and deploy everything to AWS")
   .action(deploy);
 
+program
+  .command("update")
+  .alias("u")
+  .description("Update an existing deployment with your current codebase")
+  .action(update);
+
 // Secrets
 program
   .command("secrets")
@@ -52,6 +59,12 @@ program
   .alias("nl")
   .description("Generate a new lambda function handler in your functions folder")
   .action(newlam);
+
+program
+  .command("projects")
+  .alias("p")
+  .description("List projects and make changes.")
+  .action(projects);
 
 // // Destroy
 // program

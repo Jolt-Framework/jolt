@@ -18,7 +18,7 @@ class Dynamo {
           KeyType: 'HASH',
         },
         {
-          AttributeName: "timeCreated",
+          AttributeName: "version",
           KeyType: 'RANGE',
           },
         ],
@@ -28,11 +28,17 @@ class Dynamo {
             AttributeType: 'S',
           },
           {
-            AttributeName: "timeCreated",
+            AttributeName: "version",
             AttributeType: 'S',
           },
         ],
-        BillingMode: "PAY_PER_REQUEST"
+        BillingMode: "PAY_PER_REQUEST",
+        Tags: [
+          {
+            Key: "Core-Project",
+            Value: "",
+          },
+        ],
       })
       this.table = res
 
@@ -62,7 +68,7 @@ class Dynamo {
     }
   }
 
-  format({ projectName, bucket, ...config }) {
+  format({ projectName, bucket, version, ...config }) {
     const {cloudfrontId} = config
     let items = {
       projectName: {
@@ -74,8 +80,8 @@ class Dynamo {
       distributionId: {
         S: cloudfrontId,
       },
-      timeCreated: {
-        S: Date.now().toString(),
+      version: {
+        S: version,
       },
       config: {
         S: JSON.stringify(config),
@@ -97,7 +103,7 @@ class Dynamo {
         result[key] = value
       }
     }
-    return result;
+    return { ...result, ...result.config };
   }
 
   formatStrings(items) {
@@ -105,7 +111,7 @@ class Dynamo {
     let result = {}
     keys.forEach(key => {
       let item = items[key]
-      if( typeof item !== "string") JSON.stringify(item)
+      if( typeof item !== "string") item = JSON.stringify(item)
       result[key] = {S: item}
     })
     return result;
@@ -145,9 +151,28 @@ class Dynamo {
     }
   }
 
+  async getApiId(tableName) {
+    let deployments = await this.getDeployments(tableName);
+
+    if (deployments.length === 0) return;
+    let { apiId } = deployments[0].config.api;
+    return apiId
+  }
+  async getNextVersionNumber(tableName) {
+    const deployments = await this.getDeployments(tableName);
+
+    if (deployments === undefined) return "1";
+
+    const versions = deployments.map(deployment => parseInt(deployment.version, 10));
+
+
+    let maxVersion = Math.max(...versions);
+
+    return String(maxVersion+1);
+  }
+
 // timestamp: { S: '1619556774238' },
-  async getItems(tableName) {
-    let item;
+  async getDeployments(tableName) {
     try {
       const {Items} = await this.client.scan({
         TableName: tableName,
@@ -155,11 +180,12 @@ class Dynamo {
       return Promise.resolve(Items.map(item => this.deformat(item)));
     } catch (e) {
       // console.log(e)
-      throw new Error(e.message);
+      return undefined;
     }
   }
 
-  async addItemsToTable(tableName, items) {
+
+  async addDeploymentToTable(tableName, items) {
     try {
       let confirmation = await this.client.putItem({
         TableName: tableName,

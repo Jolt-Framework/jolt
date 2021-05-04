@@ -76,8 +76,9 @@ const runLocalLambdas = (functionsFolder, port = 3001) => {
 
   console.log(`Local Lambdas running on port ${port}...`);
 
-  app.all(".functions/*", async (req, res) => {
+  app.all("/.functions/*", async (req, res) => {
     let functionName = req.url.replace(/^\/\.functions\//, "");
+
     const functionPath = req.funcMap[functionName];
 
     if (!functionPath) {
@@ -91,6 +92,7 @@ const runLocalLambdas = (functionsFolder, port = 3001) => {
 
       const processResponseAndSend = async (lambdaErr, lambdaResponse) => {
         sent = true;
+        // Clear the imported function from the cache so that the function is refreshed on each request
         delete require.cache[require.resolve(functionPath)];
 
         // For lambda creators to return their own custom errors
