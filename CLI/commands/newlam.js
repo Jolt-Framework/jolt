@@ -1,4 +1,3 @@
-const config = require(process.env.PWD + "/config.json");
 const fs = require("fs");
 const path = require("path");
 
@@ -10,24 +9,35 @@ const lambdaTemplate =
 //       For async processes that use the event loop (such as with setTimeout),
 //       you can use the the callback function parameter to return once the process has completed
 
-exports.handler = async (event, context, callback) => {
+exports.handler = async (event, _context, callback) => {
 
-
+  // extract the body from event
+  const body = JSON.parse(event.body);
+  
   // Function logic here
 
+  // for synchronous functions
+  // callback<Error, Response>
+  // callback(null, {
+  //   statusCode: 200,
+  //   body: JSON.stringify({
+  //     hello: "world"
+  //   })
 
-  // Function return value.
+  // For async functions use return value.
   // Note: body property must be valid JSON and should be stringified before it is returned
   return {
     statusCode: 200,
     body: JSON.stringify({
       hello: "world"
-    })
+    }
   }
 }
 `;
 
 const newlam = () => {
+const config = require(process.env.PWD + "/config.json");
+
   const { functionsFolder } = config.buildInfo;
   const newFuncPath = process.argv[3];
 

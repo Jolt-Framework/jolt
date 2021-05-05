@@ -1,14 +1,13 @@
-const Lambda = require("../Lambda/lambda");
-const CloudFrontWrapper = require("../CloudFront/cloudfront");
-const Gateway = require("../APIGateway/gateway");
-const Iam = require("../IAM/iam");
+const Lambda = require("../aws/lambda");
+const CloudFrontWrapper = require("../aws/cloudfront");
+const Gateway = require("../aws/gateway");
+const Iam = require("../aws/iam");
 const walkDirs = require("../Utilities/walkDirs");
 const fs = require("fs");
 const Zip = require("adm-zip");
 const path = require("path");
 const dotenv = require("dotenv");
-// const config = require("./config.json");
-const { zipFunctions, listFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
+const { zipFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
 const uniqueId = require("../Utilities/nanoid");
 
 class CORE {
@@ -40,10 +39,6 @@ class CORE {
     return funcName.replace("/", "-") + extension;
   }
 
-  /**
-   *
-   *
-   */
   static async updateProxy(cloudfrontId, proxyArn) {
     let cloudfront = new CloudFrontWrapper(this.config.region);
     let res = await cloudfront.updateEdgeLambda(cloudfrontId, proxyArn);
@@ -76,7 +71,7 @@ class CORE {
     const zippedFunctions = fs.readdirSync("archives");
 
     for (const func of zippedFunctions) {
-      await CORE.sendLambdaToBucket(func, bucket, lambdaRole);
+      await CORE.deployLambda(func, bucket, lambdaRole);
     }
 
     await this.api.createStage(version);
@@ -140,6 +135,7 @@ class CORE {
 
   static fetchLocalSecrets (funcPath, funcName) {
     const envPath = path.dirname(funcPath) + "/.env";
+
     if (fs.existsSync(envPath)) {
       return dotenv.parse(fs.readFileSync(envPath));
     } else {
@@ -151,16 +147,8 @@ class CORE {
     const funcName = path.basename(func, ".zip");
     const funcPath = `archives/${func}`;
 
-    const fetchLocalSecrets = (funcPath, funcName) => {
-      const envPath = path.dirname(funcPath) + "/.env";
-      if (fs.existsSync(envPath)) {
-        return dotenv.parse(fs.readFileSync(envPath));
-      } else {
-        console.log(`No .env file found for function: ${funcName}`);
-      }
-    }
     let functionsFolder = this.config.buildInfo.functionsFolder;
-    let secrets = fetchLocalSecrets(functionsFolder + "/" + func.replace("-", "/"))
+    let secrets = this.fetchLocalSecrets(functionsFolder + "/" + func.replace("-", "/"), funcName)
     let zippedFileBuffer = fs.readFileSync(funcPath);
 
     await bucket.uploadObject(zippedFileBuffer, funcPath);
@@ -180,9 +168,6 @@ class CORE {
       "HEAD",
     ];
 
-    // await methods.forEach(async method => {
-    //   await api.addRoute(method, funcName, this.toFileName(funcName, "" ))
-    // }) getNotes-functionId
     // adds each method to each route
     for (const method of methods) {
       await this.api.addRoute(method, funcName.replace("-", "/"), funcName);
@@ -192,56 +177,6 @@ class CORE {
   static toFuncName(path) {
     return path.split("/").slice(1).join("/").split(".").slice(0, -1).join(".");
   }
-    // await walkDirs(functionsFolder, async (path) => {
-    //   const funcName = this.toFuncName(path);
-    //   await zipFunction(path, "archives");
-
-    //   let zippedFileBuffer = fs.readFileSync(
-    //     path.replace("functions", "archives").replace(".js", ".zip")
-    //   );
-
-    //   // const zipper = new Zip();
-
-    //   // zipper.addFile(this.toFileName(funcName, ".js"), data);
-
-    //   // const zippedFileBuffer = zipper.toBuffer();
-    //   await bucket.uploadObject(
-    //     zippedFileBuffer,
-    //     this.toFileName(funcName, ".zip")
-    //   );
-    //   const lambda = new Lambda(
-    //     bucket.bucketName,
-    //     this.toFileName(funcName, ".zip")
-    //   );
-
-    //   let arn = await lambda.create(lambdaRole);
-
-    //   CORE.#deployment.lambdas.push(arn);
-    //   // **TODO**: should be able to configure the method for each lambda
-    //   const methods = [
-    //     "OPTIONS",
-    //     "GET",
-    //     "PUT",
-    //     "PATCH",
-    //     "DELETE",
-    //     "POST",
-    //     "HEAD",
-    //   ];
-
-    //   for (const method of methods) {
-    //     await api.addRoute(method, funcName, this.toFileName(funcName, ""));
-    //   }
-    // });
-
-    // await api.createStage(gatewayStage);
-    // await api.deploy(gatewayStage, gatewayDescription);
-    // this.api = api;
-    // console.log("functions and api gatway deployed to stage: /", gatewayStage)
-    // return Promise.resolve({
-    //   gatewayUrl:
-    //     `https://${api.apiId}.execute-api.${region}.amazonaws.com/` + "test",
-    // });
-  // }
 
   /**
    *   @param {S3Object} bucket the bucket client created by new S3
@@ -317,7 +252,7 @@ class CORE {
 
   static async deployToCloudFront(bucket, proxyArn, callerReference) {
     const { AWS_REGION } = this.config.AWSInfo;
-    callerReference = callerReference + uniqueId()
+    callerReference = callerReference + uniqueId();
     let client = new CloudFrontWrapper(AWS_REGION);
     let distribution = await client.createDistribution(
       bucket.bucketName + ".s3.amazonaws.com",
@@ -334,17 +269,6 @@ class CORE {
     let distribution = await cf.invalidateDistribution(distributionId);
     return Promise.resolve(distribution);
   }
-
-  // may be used later - don't delete yet
-  // static async updateCors(domainName) {
-  //   try {
-  //     await this.api.updateCors(domainName);
-  //     console.log("successfully updated cors");
-  //   } catch (error) {
-  //     console.log("unable to create cors");
-  //     throw new Error(error.message);
-  //   }
-  // }
 }
 
 module.exports = CORE;

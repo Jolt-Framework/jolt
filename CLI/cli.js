@@ -5,7 +5,6 @@ const init = require('./commands/init');
 // const { help } = require("./commands/help");
 const deploy = require("./commands/deploy");
 const update = require("./commands/update");
-const secrets = require("./commands/secrets");
 const loclam = require("./commands/loclam");
 const newlam = require("./commands/newlam");
 // const { destroy } = require("./commands/destroy");
@@ -19,7 +18,7 @@ program
   .command("init")
   .alias("i")
   .description("Create a COREpack application")
-  .action(init);
+  .action(() => console.log("asdfad"));
 
 // // Help
 // program
@@ -40,13 +39,6 @@ program
   .alias("u")
   .description("Update an existing deployment with your current codebase")
   .action(update);
-
-// Secrets
-program
-  .command("secrets")
-  .alias("s")
-  .description("Send all environment variables (found in .env files) to associated Lambdas")
-  .action(secrets);
 
 program
   .command("loclam")

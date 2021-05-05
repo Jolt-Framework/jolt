@@ -1,4 +1,4 @@
-const runLocalLambdas = require("../../LocalLambdas/localLambdas")
+const runLocalLambdas = require("../../Utilities/LocalLambdas/localLambdas")
 
 const loclam = () => {
   const { buildInfo } = require(process.env.PWD + "/config.json");

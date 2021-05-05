@@ -7,7 +7,7 @@ exports.handler = async (event, context, callback) => {
   const id = event.id;
 
   const client = new faunadb.Client({
-    secret: "fnAEF427OEACACbf49t6UGoWeJ54LKYxzE8P--I0"
+    secret: process.env.FAUNA_DB
   });
 
   try {

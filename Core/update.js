@@ -1,10 +1,10 @@
-const S3 = require("../S3/s3");
+const S3 = require("../aws/s3");
 const CORE = require("./core");
 const Builder = require("../Utilities/builder");
 const uuid = require("uuid");
-const Teardown = require('../Teardown/teardown')
-const Dynamo = require('../Dynamo/dynamo');
-const Gateway = require("../APIGateway/gateway");
+const Teardown = require('../Utilities/Teardown/teardown')
+const Dynamo = require('../aws/dynamo');
+const Gateway = require("../aws/gateway");
 let db = new Dynamo();
 
 const getConfig = () => require(process.env.PWD + "/config.json");

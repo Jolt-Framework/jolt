@@ -1,16 +1,11 @@
-const S3 = require("../S3/s3");
+const S3 = require("../aws/s3");
 const CORE = require("./core");
 const Builder = require("../Utilities/builder");
-// const uuid = require("uuid");
-const Teardown = require("../Teardown/teardown");
-const Dynamo = require("../Dynamo/dynamo");
-// const Gateway = require("../APIGateway/gateway");
-// const uniqueId = require("../Utilities/nanoid");
+const Teardown = require("../Utilities/Teardown/teardown");
+const Dynamo = require("../aws/dynamo");
 let config;
 
 const getConfig = () => require(process.env.PWD + "/config.json");
-// const { bucket: bucketName, buildCommand, region } = config.deploy;
-// const { tableName, projectName } = config;
 
 const buildProcess = async () => {
   if (!config) config = getConfig();
@@ -83,9 +78,6 @@ const teardown = async (message, error, deployment) => {
 }
 
 const createDeploymentTemplate = async () => {
-
-
-
   if (!config) config = getConfig();
   const { projectId: tableName, projectName } = config.projectInfo;
 
@@ -101,7 +93,11 @@ const createDeploymentTemplate = async () => {
     version,
   })
 };
-
+const removeArtifacts = async () => {
+  let arch = new Builder("rm -rf archives")
+  await arch.build();
+  let build = new Builder(`rm -rf build`)
+} 
 
 const run = async () => {
   try {

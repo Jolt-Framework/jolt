@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "faunadb": "^4.2.0"
-  },
-  "proxy": "3001"
-}

@@ -1,7 +1,7 @@
 {
   "projectInfo": {
-    "projectName": "testtest",
-    "projectId": "testtest-jj4iszaczh"
+    "projectName": "rodney-excellent-project",
+    "projectId": "rodney-excellent-project-7744pow30n"
   },
   "buildInfo": {
     "setupCommand": "npm install",
@@ -11,8 +11,8 @@
   },
   "AWSInfo": {
     "AWS_REGION": "us-east-1",
-    "bucketName": "testtest-jj4iszaczh-bucket",
-    "tableName": "testtest-jj4iszaczh-table",
-    "apiName": "testtest-api"
+    "bucketName": "rodney-excellent-project-7744pow30n-bucket",
+    "tableName": "rodney-excellent-project-7744pow30n-table",
+    "apiName": "rodney-excellent-project-api"
   }
 }
