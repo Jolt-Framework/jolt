@@ -3,12 +3,10 @@ const CORE = require("./core");
 const Builder = require("../Utilities/builder");
 const Teardown = require("../Utilities/Teardown/teardown");
 const Dynamo = require("../aws/dynamo");
-let config;
-
-const getConfig = () => require(process.env.PWD + "/config.json");
+const loadConfig = require("../Utilities/loadConfig");
 
 const buildProcess = async () => {
-  if (!config) config = getConfig();
+  const config = loadConfig();
   const { buildInfo } = config;
 
   console.log("setting up dependencies");
@@ -23,7 +21,7 @@ const buildProcess = async () => {
 };
 
 const deploymentProcess = async (deployment) => {
-  if (!config) config = getConfig();
+  const config = loadConfig();
   CORE.config = config;
   const { bucketName, AWS_REGION } = config.AWSInfo;
   const { projectId } = config.projectInfo;
@@ -78,7 +76,7 @@ const teardown = async (message, error, deployment) => {
 }
 
 const createDeploymentTemplate = async () => {
-  if (!config) config = getConfig();
+  const config = loadConfig();
   const { projectId: tableName, projectName } = config.projectInfo;
 
   let db = new Dynamo();
@@ -93,7 +91,9 @@ const createDeploymentTemplate = async () => {
     version,
   });
 };
+
 const removeArtifacts = async () => {
+  const config = loadConfig();
   let arch = new Builder("rm -rf archives");
   await arch.build();
   let build = new Builder(`rm -rf ${config.buildInfo.buildFolder}`);
