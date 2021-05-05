@@ -1,7 +1,7 @@
 const S3 = require("../aws/s3");
 const CORE = require("./core");
-const Builder = require("../Utilities/builder");
 const uuid = require("uuid");
+const Builder = require("../Utilities/builder");
 const Teardown = require('../Utilities/Teardown/teardown')
 const Dynamo = require('../aws/dynamo');
 const Gateway = require("../aws/gateway");
@@ -48,26 +48,22 @@ const getUpdateData = async (config) => {
 }
 
 const deployUpdate = async () => {
-
+  attachConfig();
   const config = getConfig();
   const deployment = await createDeploymentTemplate(config);
   CORE.deployment = deployment;
   CORE.config = config;
-  // try {
-  //   console.log("Building started");
+  try {
+    console.log("Building started");
 
-  //   const builder = new Builder(config.buildInfo.buildCommand);
-  //   await builder.build();
-  //   // REMOVE THIS LATER
-  //   const builder2 = new Builder("cd Demo && mv -r build ../");
-  //   await builder2.build();
-  //   // END REMOVE THIS LATER
-  //   console.log("Build completed!");
-  // } catch (error) {
-  //   console.log("Failed to complete build process");
-  //   // console.log(error.message);
-  //   throw new Error(error.message);
-  // }
+    const builder = new Builder(config.buildInfo.buildCommand);
+    await builder.build();
+    console.log("Build completed!");
+  } catch (error) {
+    console.log("Failed to complete build process");
+    // console.log(error.message);
+    throw new Error(error.message);
+  }
 
   let torn = false
   deployment.deployed = false;
@@ -82,21 +78,19 @@ const deployUpdate = async () => {
     const bucket = new S3(bucketName);
     deployment.region = region;
     deployment.bucket = bucketName;
-    console.log("trying to update ")
+    console.log("trying to update...")
 
     let api = new Gateway(config.AWSInfo.apiName, region, deployment.version);
     api.apiId = updateData.apiId;
-    console.log(api.apiId);
     await api.clearRoutes();
     await new Promise(resolve => setTimeout(resolve, 10000));
     const gatewayUrl = await CORE.updateLambdasAndGateway(bucket, updateData);
-
     await CORE.deployStaticAssets(bucket);
 
     const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
-    // const cloudfrontRes = await CORE.invalidateDistribution(cloudfrontId);
+    const cloudfrontRes = await CORE.invalidateDistribution(updateData.cloudfrontId);
 
-    CORE.updateProxy(updateData.cloudfrontId, proxyArn);
+    await CORE.updateProxy(updateData.cloudfrontId, proxyArn);
 
     deployment.cloudfrontId = updateData.cloudfrontId;
 
@@ -132,5 +126,3 @@ const deployUpdate = async () => {
 // run();
 
 module.exports = deployUpdate;
-
-// ans()

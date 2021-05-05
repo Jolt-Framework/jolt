@@ -85,7 +85,7 @@ class Lambda /*extends something?*/ {
           S3Key: this.S3Key,
           FunctionName
         }
-        
+
         if (secrets) {
           params.Environment = {
             Variables: {
@@ -99,7 +99,6 @@ class Lambda /*extends something?*/ {
         this.versioned = true;
         this.version = result.Version
         this.arn = result.FunctionArn
-        console.log(`${FunctionName} version: ${this.version}`)
         return Promise.resolve(result.FunctionArn);
       } catch (error) {
         console.log("unable to update the function's code, \n", error.message)
@@ -134,7 +133,6 @@ class Lambda /*extends something?*/ {
         Principal: 'apigateway.amazonaws.com',
       }
       await Lambda.Client.send(new AddPermissionCommand(params));
-      console.log("Successfully added permissions to lambda.");
     } catch (err) {
       console.log("Error adding permissions to lambda.", err);
     };

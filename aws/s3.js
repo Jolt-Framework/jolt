@@ -75,7 +75,6 @@ class S3 {
 
     try {
       const res = await S3.Client.send(new PutObjectCommand(objectParams));
-      console.log(`file: ${fileName} uploaded to S3`)
       const VersionId = res.VersionId;
       let Key = fileName;
       return {Key, VersionId};

@@ -24,8 +24,6 @@ class IAMWrapper {
       role = await this.client.send(new GetRoleCommand({
         RoleName: edgeLambdaRoleName,
       }));
-
-      console.log("Role: " + edgeLambdaRoleName + " already exists.")
       return Promise.resolve(role.Role.Arn);
     } catch (_) {
       console.log("Creating role: " + edgeLambdaRoleName);

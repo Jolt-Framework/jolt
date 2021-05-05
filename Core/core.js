@@ -127,6 +127,14 @@ class CORE {
     });
   }
 
+  static async redeployStaticAssets(bucketName, files) {
+    let bucket = new S3(bucketName);
+
+    for (const file of files) {
+      await bucket.reuploadObject(file);
+    }
+
+  }
   /**
    *   @param {S3Object} bucket the bucket client created by new S3
    *   @param {string} func the name of the function
@@ -263,7 +271,7 @@ class CORE {
     return Promise.resolve({ distribution });
   }
 
-  static async invalidateDistribution(distributionid) {
+  static async invalidateDistribution(distributionId) {
     const { AWS_REGION } = this.config.AWSInfo;
     let cf = new CloudFrontWrapper(AWS_REGION);
     let distribution = await cf.invalidateDistribution(distributionId);

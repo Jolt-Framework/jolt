@@ -44,21 +44,21 @@ const deploymentProcess = async (deployment) => {
 
   deployment.cloudfrontId = distribution.Id
   const { DomainName: domainName } = distribution;
-  deployment.domainName = domainName
+  deployment.domainName = domainName;
   console.log("Successfully deployed application. Find it here:\n", domainName);
   deployment.deployed = true;
 }
 
 const sendToDB = async (deployment) => {
   if (!deployment.deployed) {
-    let teardown = new Teardown(deployment)
+    let teardown = new Teardown(deployment);
     await teardown.all();
     return;
   }
   console.log("Sending deployment info to the DynamoDB");
   let db = new Dynamo();
-  await db.createTable(deployment.tableName)
-  await db.addDeploymentToTable(deployment.tableName, deployment)
+  await db.createTable(deployment.tableName);
+  await db.addDeploymentToTable(deployment.tableName, deployment);
   console.log("Deployment successfully recorded in DynamoDB");
 }
 
@@ -73,7 +73,7 @@ const teardown = async (message, error, deployment) => {
     torn = true;
     console.log("teardown completed.");
   } catch (error) {
-    console.log("unable to tear down, here is the deployment", deployment)
+    console.log("unable to tear down, here is the deployment", deployment);
   }
 }
 
@@ -91,19 +91,23 @@ const createDeploymentTemplate = async () => {
     lambdas: [],
     edgeLambdas: [],
     version,
-  })
+  });
 };
 const removeArtifacts = async () => {
-  let arch = new Builder("rm -rf archives")
+  let arch = new Builder("rm -rf archives");
   await arch.build();
-  let build = new Builder(`rm -rf build`)
+  let build = new Builder(`rm -rf ${config.buildInfo.buildFolder}`);
+  await build.build();
 } 
 
-const run = async () => {
-  try {
-    await buildProcess()
-  } catch (error) {
-    return console.log("unable to build the project, error: ", error.message)
+const run = async (prebuilt) => {
+  if (!prebuilt) {
+    try {
+      await removeArtifacts();
+      await buildProcess();
+    } catch (error) {
+      return console.log("unable to build the project, error: ", error.message);
+    }
   }
 
   const deployment = await createDeploymentTemplate();
@@ -111,15 +115,17 @@ const run = async () => {
     await deploymentProcess(deployment);
   } catch (error) {
     torn = true;
-    return teardown("unable to provision resources", error, deployment)
+    return teardown("unable to provision resources", error, deployment);
   }
 
   try {
     if(!torn) await sendToDB(deployment);
   } catch (error) {
-    return teardown("unable to store deployment in the database", error, deployment)
+    return teardown("unable to store deployment in the database", error, deployment);
   }
-
+  if (!prebuilt) {
+    await removeArtifacts();
+  }
   console.log("the deployment ", deployment)
 }
 

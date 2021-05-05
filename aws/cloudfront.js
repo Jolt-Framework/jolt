@@ -77,7 +77,18 @@ class CloudFrontWrapper {
   }
 
   async invalidateDistribution(id ) {
-    const res = await this.client.invalidateDistribution({ DistributionId: id })
+     const res = await this.client.createInvalidation({
+      DistributionId: id,
+      InvalidationBatch: {
+        CallerReference: Date.now().toString(),
+        Paths: {
+          Items: [
+            `/${CloudFrontWrapper.config.buildInfo.buildFolder}/*`,
+          ],
+          Quantity: 1,
+        },
+      }
+    });
     let newRes = await AWS.waitForInvalidationCompleted({
       maxWaitTime: 300,
       client: this.client

@@ -5,10 +5,10 @@ const CloudFront = require("../aws/cloudfront");
 const Dynamo = require("../aws/dynamo");
 const Lambda = require("../aws/lambda");
 const Core = require("../Core/core");
-
 const attachConfig = () => {
+  let config;
   try {
-    const config = require(process.env.PWD + "/config.json");
+    config = require(process.env.PWD + "/config.json");
   } catch (err) {
     throw Error("config.json not found. Try running this command from the root of your project or running 'core init' to get started")
   }
@@ -17,3 +17,5 @@ const attachConfig = () => {
     wrapper.config = config;
   })
 }
+
+module.exports = attachConfig;

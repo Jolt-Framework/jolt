@@ -8,7 +8,7 @@ const update = require("./commands/update");
 const loclam = require("./commands/loclam");
 const newlam = require("./commands/newlam");
 // const { destroy } = require("./commands/destroy");
-const projects = () => {};
+const projects = require("./commands/projects");
 const program = new Command();
 // const version = require("../package.json").version;
 // program.version(version).description("COREpack");
@@ -18,7 +18,7 @@ program
   .command("init")
   .alias("i")
   .description("Create a COREpack application")
-  .action(() => console.log("asdfad"));
+  .action(init);
 
 // // Help
 // program

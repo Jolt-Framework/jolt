@@ -1,8 +1,8 @@
 const deployUpdate = require("../../Core/update");
-// const attachConfig = require("../../Core/attachConfig");
+const attachConfig = require("../../Utilities/attachConfig");
 
 const update = () => {
-  // attachConfig();
+  attachConfig();
   deployUpdate();
 }
 
