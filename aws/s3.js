@@ -2,7 +2,7 @@ const {
   S3Client,
   CreateBucketCommand,
   PutObjectCommand,
-
+  GetObjectCommand,
   ListObjectsCommand,
   DeleteBucketCommand,
   DeleteObjectsCommand,
@@ -83,12 +83,44 @@ class S3 {
     }
   }
 
+  async reuploadObject({ Key, VersionId }) {
+    const objectParams = {
+      Bucket: this.bucketName,
+      Key,
+      VersionId,
+    };
+    let obj;
+    try {
+      obj = await S3.Client.send(new GetObjectCommand(objectParams));
+    } catch (error) {
+      console.log("unable to get objects");
+      throw new Error(error.message);
+    }
+
+
+    try {
+      let res = await this.uploadObject(obj.Body.stream, Key, true);
+
+      return res
+      //   objectParams.Body = obj.Body;
+    //   objectParams.ContentType = obj.ContentType;
+    //   delete objectParams.VersionId;
+
+    //   const res = await S3.Client.send(new PutObjectCommand(objectParams));
+    //   return res;
+    } catch (error) {
+      console.log("unable to reupload the object: ")
+
+      throw new Error(error.message);
+    }
+  }
+
   static async teardown(Bucket, Objects) {
     console.log("deleting bucket files")
     // given bucketName and an array of {fileName, version}
     if (Objects.length === 0) return;
     try {
-       console.log(`marking current distribution objects for deletion`);
+      console.log(`marking current distribution objects for deletion`);
       for (const object of Objects) {
         await this.Client.send(new DeleteObjectCommand({
           Bucket,

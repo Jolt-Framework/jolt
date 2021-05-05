@@ -9,6 +9,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 const { zipFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
 const uniqueId = require("../Utilities/nanoid");
+const S3 = require("../aws/s3");
 
 class CORE {
   static #deployment;

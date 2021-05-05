@@ -1,0 +1,18 @@
+{
+  "projectInfo": {
+    "projectName": "rodney-excellent-project",
+    "projectId": "rodney-excellent-project-7744pow30n"
+  },
+  "buildInfo": {
+    "setupCommand": "npm install",
+    "buildCommand": "npm run build",
+    "functionsFolder": "functions",
+    "buildFolder": "build"
+  },
+  "AWSInfo": {
+    "AWS_REGION": "us-east-1",
+    "bucketName": "rodney-excellent-project-7744pow30n-bucket",
+    "tableName": "rodney-excellent-project-7744pow30n-table",
+    "apiName": "rodney-excellent-project-api"
+  }
+}
