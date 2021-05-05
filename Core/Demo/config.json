@@ -1,7 +1,7 @@
 {
   "projectInfo": {
-    "projectName": "core-demo",
-    "projectId": "core-demo-iu1gn7fr5r"
+    "projectName": "testtest",
+    "projectId": "testtest-jj4iszaczh"
   },
   "buildInfo": {
     "setupCommand": "npm install",
@@ -11,8 +11,8 @@
   },
   "AWSInfo": {
     "AWS_REGION": "us-east-1",
-    "bucketName": "core-demo-iu1gn7fr5r-bucket",
-    "tableName": "core-demo-iu1gn7fr5r-table",
-    "apiName": "core-demo-api"
+    "bucketName": "testtest-jj4iszaczh-bucket",
+    "tableName": "testtest-jj4iszaczh-table",
+    "apiName": "testtest-api"
   }
 }
