@@ -47,6 +47,13 @@ const getUpdateData = async (config) => {
   return dataForUpdate;
 }
 
+const removeArtifacts = async () => {
+  let arch = new Builder("rm -rf archives");
+  await arch.build();
+  let build = new Builder(`rm -rf ${config.buildInfo.buildFolder}`);
+  await build.build();
+}
+
 const deployUpdate = async () => {
   attachConfig();
   const config = getConfig();
@@ -55,7 +62,7 @@ const deployUpdate = async () => {
   CORE.config = config;
   try {
     console.log("Building started");
-
+    await removeArtifacts();
     const builder = new Builder(config.buildInfo.buildCommand);
     await builder.build();
     console.log("Build completed!");
