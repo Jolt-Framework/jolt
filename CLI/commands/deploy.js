@@ -1,9 +1,11 @@
 const run = require('../../Core/deploy');
+const getDescriptionPrompt = require("../../Utilities/descriptionPrompt");
 const attachConfig = require("../../Utilities/attachConfig");
 
-const deploy = () => {
+const deploy = async () => {
   attachConfig();
-  run();
+  const deploymentDescription = await getDescriptionPrompt();
+	run(deploymentDescription);
 }
 
 module.exports = deploy;

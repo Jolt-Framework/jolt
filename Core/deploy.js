@@ -76,7 +76,7 @@ const teardown = async (message, error, deployment) => {
   }
 }
 
-const createDeploymentTemplate = async () => {
+const createDeploymentTemplate = async (description) => {
   const config = loadConfig();
   const { projectId: tableName, projectName } = config.projectInfo;
 
@@ -90,6 +90,7 @@ const createDeploymentTemplate = async () => {
     lambdas: [],
     edgeLambdas: [],
     version,
+		description
   });
 };
 
@@ -101,17 +102,15 @@ const removeArtifacts = async () => {
   await build.build();
 }
 
-const run = async (prebuilt) => {
-  if (!prebuilt) {
-    try {
-      await removeArtifacts();
-      await buildProcess();
-    } catch (error) {
-      return console.log("unable to build the project, error: ", error.message);
-    }
-  }
+const run = async (deploymentDescription) => {
+	try {
+		await removeArtifacts();
+		await buildProcess();
+	} catch (error) {
+		return console.log("unable to build the project, error: ", error.message);
+	}
 
-  const deployment = await createDeploymentTemplate();
+  const deployment = await createDeploymentTemplate(deploymentDescription);
   try {
     await deploymentProcess(deployment);
   } catch (error) {
@@ -124,9 +123,8 @@ const run = async (prebuilt) => {
   } catch (error) {
     return teardown("unable to store deployment in the database", error, deployment);
   }
-  if (!prebuilt) {
-    await removeArtifacts();
-  }
+
+  await removeArtifacts();
 }
 
 module.exports = run;
