@@ -1,7 +1,7 @@
 {
   "projectInfo": {
-    "projectName": "aappappallal",
-    "projectId": "aappappallal-2jm2deb4pv"
+    "projectName": "projectname",
+    "projectId": "projectname-27st2ie7mb"
   },
   "buildInfo": {
     "setupCommand": "npm install",
@@ -11,8 +11,8 @@
   },
   "AWSInfo": {
     "AWS_REGION": "us-east-1",
-    "bucketName": "aappappallal-2jm2deb4pv-bucket",
-    "tableName": "aappappallal-2jm2deb4pv-table",
-    "apiName": "aappappallal-api"
+    "bucketName": "projectname-27st2ie7mb-bucket",
+    "tableName": "projectname-27st2ie7mb-table",
+    "apiName": "projectname-api"
   }
 }

@@ -13,6 +13,7 @@ exports.handler = async (event, _context, callback) => {
   });
 
   try {
+
     const response = await client.query(
       q.Paginate(q.Documents(q.Collection('notes'))),
       );
@@ -22,7 +23,7 @@ exports.handler = async (event, _context, callback) => {
     const info = await client.query(somethingElse);
     const docRefs = info.map(({data, ref}) => { return {...data, id: ref.id}});
 
-    return {statusCode: 200, body: JSON.stringify({ notes: docRefs})};
+    return {statusCode: 200, body: JSON.stringify({ notes: docRefs, hi: "Mom"})};
   } catch (error) {
     callback(error.message);
   }

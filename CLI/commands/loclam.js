@@ -1,9 +1,19 @@
-const runLocalLambdas = require("../../Utilities/LocalLambdas/localLambdas")
+const concurrently = require("concurrently");
+const loadConfig = require("../../Utilities/loadConfig");
 
-const loclam = () => {
-  const { buildInfo } = require(process.env.PWD + "/config.json");
+const loclam = async () => {
+  const { devServerCommand } = loadConfig().buildInfo;
 
-  runLocalLambdas(buildInfo.functionsFolder);
+  await concurrently([
+    { command:
+      `node ../../Utilities/LocalLambdas/localLambdas.js`,
+      name: "Local Lambda Server",
+    },
+    {
+      command: `cd ${process.env.PWD} && ${devServerCommand}`,
+      name: "Application Server"
+    }
+  ]);
 }
 
 module.exports = loclam;

@@ -32,6 +32,7 @@
         "array-flat-polyfill": "^1.0.1",
         "commander": "^2.20.3",
         "common-path-prefix": "^2.0.0",
+        "concurrently": "^6.0.2",
         "cp-file": "^7.0.0",
         "del": "^5.1.0",
         "dotenv": "^8.2.0",

@@ -10,6 +10,7 @@
 // TODO: Is there a way to run the lambdas in the background, behind the React server without needing to run loclam in a separate terminal?
 // TODO: Handling dynamic routing and multipart paths
 
+const loadConfig = require("../loadConfig");
 const express = require('express');
 const { listFunctions } = require("../zip-it-and-ship-it/src/main");
 const path = require("path");
@@ -66,7 +67,9 @@ const logRequest = (req, _, next) => {
   next();
 }
 
-const runLocalLambdas = (functionsFolder, port = 3001) => {
+const runLocalLambdas = () => {
+  const { functionsFolder, functionsPort } = loadConfig().buildInfo;
+  console.log(functionsPort,functionsFolder);
   const app = express();
 
   // Middleware
@@ -74,7 +77,7 @@ const runLocalLambdas = (functionsFolder, port = 3001) => {
   app.use(createLocalLambdaPathMap(functionsFolder));
   app.use(logRequest);
 
-  console.log(`Local Lambdas running on port ${port}...`);
+  console.log(`Local Lambdas running on port ${functionsPort}...`);
 
   app.all("/.functions/*", async (req, res) => {
     let functionName = req.url.replace(/^\/\.functions\//, "");
@@ -97,6 +100,7 @@ const runLocalLambdas = (functionsFolder, port = 3001) => {
 
         // For lambda creators to return their own custom errors
         if (lambdaErr) {
+          console.log(lambdaResponse.body)
           res.status(500).send(JSON.stringify(lambdaErr)); 
         } else {
           try {
@@ -104,6 +108,7 @@ const runLocalLambdas = (functionsFolder, port = 3001) => {
             if (lambdaResponse.body) {
               JSON.parse(lambdaResponse.body);
             }
+
 
             res
             .status(lambdaResponse.statusCode || 200)
@@ -123,16 +128,18 @@ const runLocalLambdas = (functionsFolder, port = 3001) => {
         processResponseAndSend
       );
 
+      console.log(output)
+
       if (!sent) {
         processResponseAndSend(null, output);
       }
     }
   })
 
-  app.listen(port);
+  app.listen(functionsPort);
 }
 
-module.exports = runLocalLambdas;
+runLocalLambdas();
 
 // GET request event object
 // {
