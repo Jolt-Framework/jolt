@@ -19,7 +19,9 @@ function App() {
 
   return (
     <div>
-      <h1>My Notes:</h1>
+      <h1>My Notes!</h1>
+      <h2>Back off!</h2>
+      <h2>V2</h2>
       <div id="new-note-form">
         <NoteForm />
       </div>

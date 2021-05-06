@@ -70,7 +70,7 @@ class Dynamo {
     }
   }
 
-  format({ projectName, bucket, version, ...config }) {
+  format({ projectName, bucket, version, description, ...config }) {
     const { cloudfrontId } = config;
     let items = {
       projectName: {
@@ -84,6 +84,9 @@ class Dynamo {
       },
       version: {
         S: version,
+      },
+      description: {
+        S: description,
       },
       config: {
         S: JSON.stringify(config),
@@ -208,7 +211,6 @@ class Dynamo {
       });
       return Promise.resolve(Items.map((item) => this.deformat(item)));
     } catch (e) {
-      // console.log(e)
       return undefined;
     }
   }
@@ -276,6 +278,7 @@ class Dynamo {
         coreTables[projectName] = tableName;
       }
     }
+
     return coreTables;
   }
 }

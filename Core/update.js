@@ -5,14 +5,13 @@ const Builder = require("../Utilities/builder");
 const Teardown = require('../Utilities/Teardown/teardown')
 const Dynamo = require('../aws/dynamo');
 const Gateway = require("../aws/gateway");
+const loadConfig = require("../Utilities/loadConfig");
 let db = new Dynamo();
-
-const getConfig = () => require(process.env.PWD + "/config.json");
 
 // TODO get from config
 // const gatewayStage = "test";
-const createDeploymentTemplate = async (config) => {
-  if (!config) config = getConfig();
+const createDeploymentTemplate = async (description) => {
+  const config = loadConfig();
   const { projectId: tableName, projectName } = config.projectInfo;
 
   let version = await db.getNextVersionNumber(tableName);
@@ -24,9 +23,9 @@ const createDeploymentTemplate = async (config) => {
     lambdas: [],
     edgeLambdas: [],
     version,
+    description,
   })
 };
-
 
 const getUpdateData = async (config) => {
   // table: Project name(PK) || version(SK)
@@ -48,18 +47,19 @@ const getUpdateData = async (config) => {
 }
 
 const removeArtifacts = async () => {
+  const config = loadConfig();
   let arch = new Builder("rm -rf archives");
   await arch.build();
   let build = new Builder(`rm -rf ${config.buildInfo.buildFolder}`);
   await build.build();
 }
 
-const deployUpdate = async () => {
-  attachConfig();
-  const config = getConfig();
-  const deployment = await createDeploymentTemplate(config);
+const deployUpdate = async (deploymentDescription) => {
+  const config = loadConfig();
+  const deployment = await createDeploymentTemplate(deploymentDescription);
   CORE.deployment = deployment;
   CORE.config = config;
+
   try {
     console.log("Building started");
     await removeArtifacts();
@@ -68,15 +68,12 @@ const deployUpdate = async () => {
     console.log("Build completed!");
   } catch (error) {
     console.log("Failed to complete build process");
-    // console.log(error.message);
     throw new Error(error.message);
   }
 
   let torn = false
   deployment.deployed = false;
   const updateData = await getUpdateData(config);
-
-
 
   try {
     const bucketName = config.AWSInfo.bucketName;

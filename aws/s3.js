@@ -12,7 +12,6 @@ const {
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 
-const fs = require("fs");
 const Mime = require('mime-types');
 
 class S3 {
@@ -71,6 +70,7 @@ class S3 {
       Key: fileName,
       ContentType: Mime.lookup(fileName),
     };
+
     if (!!pub) objectParams.ACL = "public-read";
 
     try {
@@ -89,7 +89,9 @@ class S3 {
       Key,
       VersionId,
     };
+
     let obj;
+
     try {
       obj = await S3.Client.send(new GetObjectCommand(objectParams));
     } catch (error) {
@@ -97,9 +99,17 @@ class S3 {
       throw new Error(error.message);
     }
 
+	
+		const streamSegments = [];
+
+		for await (let seg of obj.Body) {
+      streamSegments.push(seg);
+		}
+
+    const objectBuffer = Buffer.concat(streamSegments);
 
     try {
-      let res = await this.uploadObject(obj.Body.stream, Key, true);
+      let res = await this.uploadObject(objectBuffer, Key, true);
 
       return res
       //   objectParams.Body = obj.Body;

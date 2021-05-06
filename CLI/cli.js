@@ -58,6 +58,12 @@ program
   .description("List projects and make changes.")
   .action(projects);
 
+program
+  .command("run")
+  .alias("p")
+  .description("List projects and make changes.")
+  .action(projects);
+
 // // Destroy
 // program
 //   .command("destroy")

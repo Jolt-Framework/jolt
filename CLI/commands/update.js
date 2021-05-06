@@ -1,9 +1,11 @@
 const deployUpdate = require("../../Core/update");
 const attachConfig = require("../../Utilities/attachConfig");
+const getDescriptionPrompt = require("../../Utilities/descriptionPrompt");
 
-const update = () => {
+const update = async () => {
   attachConfig();
-  deployUpdate();
+  const deploymentDescription = await getDescriptionPrompt();
+  deployUpdate(deploymentDescription);
 }
 
 module.exports = update;

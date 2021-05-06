@@ -78,10 +78,9 @@ class CORE {
     await this.api.createStage(version);
     await this.api.deploy(version, gatewayDescription);
 
-    return Promise.resolve({
-      gatewayUrl:
+    return Promise.resolve(
         `https://${this.api.apiId}.execute-api.${AWS_REGION}.amazonaws.com/${version}`
-    });
+    );
   }
 
   /**

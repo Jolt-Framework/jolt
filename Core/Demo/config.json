@@ -1,7 +1,7 @@
 {
   "projectInfo": {
-    "projectName": "rodney-excellent-project",
-    "projectId": "rodney-excellent-project-7744pow30n"
+    "projectName": "comeonbaby",
+    "projectId": "comeonbaby-d68xygxwf4"
   },
   "buildInfo": {
     "setupCommand": "npm install",
@@ -11,8 +11,8 @@
   },
   "AWSInfo": {
     "AWS_REGION": "us-east-1",
-    "bucketName": "rodney-excellent-project-7744pow30n-bucket",
-    "tableName": "rodney-excellent-project-7744pow30n-table",
-    "apiName": "rodney-excellent-project-api"
+    "bucketName": "comeonbaby-d68xygxwf4-bucket",
+    "tableName": "comeonbaby-d68xygxwf4-table",
+    "apiName": "comeonbaby-api"
   }
 }

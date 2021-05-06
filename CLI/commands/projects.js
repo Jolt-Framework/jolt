@@ -108,12 +108,15 @@ async function selectTable() {
 async function selectVersion(tableName) {
   let appVersions = await Dynamo.getDeployments(tableName);
   let latestVersion = await Dynamo.getLatestVersion(tableName);
+
   const versionChoices = appVersions.map(version => {
-    return { title: version.version , value: version.version };
+    return { title: `${version.version} - ${version.description}` , value: version.version };
   });
+
   const initialIndex = versionChoices.findIndex(choice => String(choice.value) === latestVersion);
   console.log(initialIndex);
   versionChoices[initialIndex].disabled = true;
+
   const question2 = {
     type: 'select',
     name: 'value',
@@ -125,9 +128,11 @@ async function selectVersion(tableName) {
     },
     initial: initialIndex,
   }
+
   versionChoices.push({ title: "<- Back", value: "back" });
 
   const { value: version } = await prompts(question2);
+  console.log(version)
   return version;
 }
 

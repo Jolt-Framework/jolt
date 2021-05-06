@@ -94,7 +94,6 @@ class Lambda /*extends something?*/ {
           };
         }
 
-
         result = await Lambda.Client.send(new UpdateFunctionCodeCommand(params))
         this.versioned = true;
         this.version = result.Version
