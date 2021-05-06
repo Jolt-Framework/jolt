@@ -1,6 +1,5 @@
 const { IAM, CreateRoleCommand, AttachRolePolicyCommand, GetRoleCommand } = require("@aws-sdk/client-iam");
 const AWS = require("@aws-sdk/client-iam");
-// const config = require("../Core/config.json");
 
 class IAMWrapper {
   static roles = {};
@@ -162,7 +161,7 @@ class IAMWrapper {
         role = await this.client.createRole({
           RoleName: name,
           AssumeRolePolicyDocument: JSON.stringify(policyDocument),
-          Tags: [{ "Key": "Core-Jamstack", "Value": "MVP" }] // come back to remove hard code
+          Tags: [{ Key: "Jolt-Project", Value: "role" }], // come back to remove hard code
         });
         IAMWrapper.roles[name] = role;
       } catch (error) {

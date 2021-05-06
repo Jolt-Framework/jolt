@@ -1,5 +1,5 @@
 const S3 = require("../aws/s3");
-const CORE = require("./core");
+const JOLT = require("./jolt");
 const uuid = require("uuid");
 const Builder = require("../Utilities/builder");
 const Teardown = require('../Utilities/Teardown/teardown')
@@ -60,8 +60,8 @@ const deployUpdate = async (deploymentDescription) => {
   const config = loadConfig();
   const deployment = await createDeploymentTemplate(deploymentDescription);
 
-  CORE.deployment = deployment;
-  CORE.config = config;
+  JOLT.deployment = deployment;
+  JOLT.config = config;
 
   try {
     console.log("Building started");
@@ -81,7 +81,7 @@ const deployUpdate = async (deploymentDescription) => {
   try {
     const bucketName = config.AWSInfo.bucketName;
     const region = config.AWSInfo.AWS_REGION;
-    const ref = "CORE-Jamstack:" + uuid.v4();
+    // const ref = "Jolt-Jamstack:" + uuid.v4();
     const bucket = new S3(bucketName);
     deployment.region = region;
     deployment.bucket = bucketName;
@@ -91,14 +91,14 @@ const deployUpdate = async (deploymentDescription) => {
     api.apiId = updateData.apiId;
     await api.clearRoutes();
     await new Promise(resolve => setTimeout(resolve, 10000));
-    const gatewayUrl = await CORE.updateLambdasAndGateway(bucket, updateData);
+    const gatewayUrl = await JOLT.updateLambdasAndGateway(bucket, updateData);
     deployment.api = api;
-    await CORE.deployStaticAssets(bucket);
+    await JOLT.deployStaticAssets(bucket);
     delete deployment.api.client;
-    const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
-    const cloudfrontRes = await CORE.invalidateDistribution(updateData.cloudfrontId);
+    const { proxyArn } = await JOLT.deployEdgeLambda(bucket, gatewayUrl);
+    const cloudfrontRes = await JOLT.invalidateDistribution(updateData.cloudfrontId);
 
-    await CORE.updateProxy(updateData.cloudfrontId, proxyArn);
+    await JOLT.updateProxy(updateData.cloudfrontId, proxyArn);
 
     deployment.cloudfrontId = updateData.cloudfrontId;
 

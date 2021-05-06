@@ -11,25 +11,25 @@ const { zipFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
 const uniqueId = require("../Utilities/nanoid");
 const S3 = require("../aws/s3");
 
-class CORE {
+class JOLT {
   static #deployment;
 
   static get deployment() {
-    return CORE.#deployment;
+    return JOLT.#deployment;
   }
 
   static set deployment(deployment) {
-    CORE.#deployment = deployment;
+    JOLT.#deployment = deployment;
   }
 
   static #config;
 
   static get config() {
-    return CORE.#config;
+    return JOLT.#config;
   }
 
   static set config(config) {
-    CORE.#config = config;
+    JOLT.#config = config;
   }
 
   static toFuncName(path) {
@@ -72,7 +72,7 @@ class CORE {
     const zippedFunctions = fs.readdirSync("archives");
 
     for (const func of zippedFunctions) {
-      await CORE.deployLambda(func, bucket, lambdaRole);
+      await JOLT.deployLambda(func, bucket, lambdaRole);
     }
 
     await this.api.createStage(version);
@@ -100,7 +100,7 @@ class CORE {
 
     this.api = new Gateway(apiName, AWS_REGION, version);
     await this.api.create();
-    CORE.#deployment.api = this.api;
+    JOLT.#deployment.api = this.api;
 
     const iam = new Iam(AWS_REGION);
     const lambdaRole = await iam.createLambdaRole();
@@ -113,7 +113,7 @@ class CORE {
     const zippedFunctions = fs.readdirSync("archives");
 
     for (const func of zippedFunctions) {
-      await CORE.deployLambda(func, bucket, lambdaRole);
+      await JOLT.deployLambda(func, bucket, lambdaRole);
     }
 
     await this.api.createStage(version);
@@ -191,7 +191,7 @@ class CORE {
     await walkDirs(buildFolder, async (path) => {
       let data = fs.readFileSync(path);
       const file = await bucket.uploadObject(data, path, true);
-      if (file) CORE.#deployment.files.push(file);
+      if (file) JOLT.#deployment.files.push(file);
     });
 
     console.log("All files added.");
@@ -240,7 +240,7 @@ class CORE {
       await edgelambda.deployVersion();
       proxyArn = `${edgelambda.arn}:${edgelambda.version}`;
     }
-    CORE.#deployment.edgeLambdas.push(proxyArn);
+    JOLT.#deployment.edgeLambdas.push(proxyArn);
 
     console.log("Edge lambda successfully deployed");
     return Promise.resolve({ proxyArn });
@@ -274,4 +274,4 @@ class CORE {
   }
 }
 
-module.exports = CORE;
+module.exports = JOLT;

@@ -36,7 +36,7 @@ class Dynamo {
         BillingMode: "PAY_PER_REQUEST",
         Tags: [
           {
-            Key: "Core-Project-Version",
+            Key: "Jolt-Project-Version",
             Value: "",
           },
         ],
@@ -242,7 +242,7 @@ class Dynamo {
       ResourceArn: arn,
       Tags: [
         {
-          Key: "Core-Project-Version",
+          Key: "Jolt-Project-Version",
           Value: version,
         }
       ],
@@ -261,7 +261,7 @@ class Dynamo {
       ResourceArn: await Dynamo.#getDbArn(tableName),
     });
 
-    return tags.Tags.find(tag => tag.Key === "Core-Project-Version").Value;
+    return tags.Tags.find(tag => tag.Key === "Jolt-Project-Version").Value;
   }
 
   static async getProjects() {
@@ -269,19 +269,19 @@ class Dynamo {
     const listTablesResponse = await db.listTables({});
     const tableNames = listTablesResponse.TableNames;
 
-    const coreTables = {};
+    const joltTables = {};
     for (const tableName of tableNames) {
       let tableTags = await db.listTagsOfResource({
         ResourceArn: await Dynamo.#getDbArn(tableName),
       });
-      if (tableTags.Tags.find((tag) => tag.Key === "Core-Project-Version")) {
+      if (tableTags.Tags.find((tag) => tag.Key === "Jolt-Project-Version")) {
         let projectName = tableName.split("-").slice(0, -1).join("-");
 
-        coreTables[projectName] = tableName;
+        joltTables[projectName] = tableName;
       }
     }
 
-    return coreTables;
+    return joltTables;
   }
 }
 

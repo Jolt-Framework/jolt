@@ -1,5 +1,5 @@
 const S3 = require("../aws/s3");
-const CORE = require("./core");
+const JOLT = require("./jolt");
 const Builder = require("../Utilities/builder");
 const Teardown = require("../Utilities/Teardown/teardown");
 const Dynamo = require("../aws/dynamo");
@@ -22,7 +22,7 @@ const buildProcess = async () => {
 
 const deploymentProcess = async (deployment) => {
   const config = loadConfig();
-  CORE.config = config;
+  JOLT.config = config;
   const { bucketName, AWS_REGION } = config.AWSInfo;
   const { projectId } = config.projectInfo;
 
@@ -31,14 +31,14 @@ const deploymentProcess = async (deployment) => {
 
   deployment.region = AWS_REGION;
   deployment.bucket = bucketName;
-  CORE.deployment = deployment;
+  JOLT.deployment = deployment;
 
-  const gatewayUrl = await CORE.deployLambdasAndGateway(bucket);
+  const gatewayUrl = await JOLT.deployLambdasAndGateway(bucket);
 
-  await CORE.deployStaticAssets(bucket);
+  await JOLT.deployStaticAssets(bucket);
 
-  const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
-  const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, projectId);
+  const { proxyArn } = await JOLT.deployEdgeLambda(bucket, gatewayUrl);
+  const { distribution } = await JOLT.deployToCloudFront(bucket, proxyArn, projectId);
 
   deployment.cloudfrontId = distribution.Id
   const { DomainName: domainName } = distribution;

@@ -35,14 +35,21 @@ exports.handler = async (event, _context, callback) => {
 }
 `;
 
-const newlam = () => {
-const config = require(process.env.PWD + "/config.json");
-
+const lambda = () => {
+let config
+  try {
+    config = require(process.env.PWD + "/config.json");
+  } catch (error) {
+    return console.log(
+      "Please run 'jolt init' to initialize the project first"
+    );
+  }
   const { functionsFolder } = config.buildInfo;
+  if (!functionsFolder) return console.log("functions folder not specified");
   const newFuncPath = process.argv[3];
 
   if (!newFuncPath) {
-    throw new Error("Enter a new Lambda name or multi-segment path for  a new Lambda (eg: path/to/lambdaName)");
+    throw new Error("Enter a new Lambda name or multi-segment path for a new Lambda (eg: path/to/lambdaName)");
   } else if (functionExists(functionsFolder, newFuncPath)) {
     throw new Error("You already have a Lambda by that name in your functions folder");
   }
@@ -59,4 +66,4 @@ const functionExists = (funcFolder, funcPath) => {
   return fs.existsSync(`${funcFolder}/${funcPath}`);
 }
 
-module.exports = newlam;
+module.exports = lambda;

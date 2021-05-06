@@ -17,9 +17,14 @@ class CloudFrontWrapper {
         reference
       )
     };
+    // Tags: [ // need to add tags
+    //     {
+    //       Key: "Jolt-Project",
+    //       Value: projectName,
+    //     }
+    //   ],
     try {
       const { Distribution } = await this.client.createDistribution(params);
-
       CloudFrontWrapper.distributions[reference] = Distribution;
       return Distribution;
     } catch (error) {
