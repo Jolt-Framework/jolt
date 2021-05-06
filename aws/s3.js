@@ -111,13 +111,7 @@ class S3 {
     try {
       let res = await this.uploadObject(objectBuffer, Key, true);
 
-      return res
-      //   objectParams.Body = obj.Body;
-    //   objectParams.ContentType = obj.ContentType;
-    //   delete objectParams.VersionId;
-
-    //   const res = await S3.Client.send(new PutObjectCommand(objectParams));
-    //   return res;
+      return res;
     } catch (error) {
       console.log("unable to reupload the object: ")
 

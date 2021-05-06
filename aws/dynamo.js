@@ -182,6 +182,7 @@ class Dynamo {
     const deployments = await this.getDeployments(tableName);
 
     if (deployments === undefined) return "1";
+    if (deployments.length === 0) return "1";
 
     const versions = deployments.map((deployment) =>
       parseInt(deployment.version, 10)

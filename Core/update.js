@@ -12,6 +12,7 @@ let db = new Dynamo();
 // const gatewayStage = "test";
 const createDeploymentTemplate = async (description) => {
   const config = loadConfig();
+
   const { projectId: tableName, projectName } = config.projectInfo;
 
   let version = await db.getNextVersionNumber(tableName);
@@ -28,7 +29,6 @@ const createDeploymentTemplate = async (description) => {
 };
 
 const getUpdateData = async (config) => {
-  // table: Project name(PK) || version(SK)
   const { projectId } = config.projectInfo;
   const {region} = config.AWSInfo
   let db = new Dynamo(region);
@@ -39,7 +39,7 @@ const getUpdateData = async (config) => {
   const {edgeLambdas, api, bucket, cloudfrontId} = deployment
   let dataForUpdate = {
     cloudfrontId: cloudfrontId,
-    s3: bucket, // bucket name
+    s3: bucket,
     apiId: api.apiId,
     proxyARN: edgeLambdas[0]
   }
@@ -48,15 +48,18 @@ const getUpdateData = async (config) => {
 
 const removeArtifacts = async () => {
   const config = loadConfig();
+
   let arch = new Builder("rm -rf archives");
   await arch.build();
   let build = new Builder(`rm -rf ${config.buildInfo.buildFolder}`);
   await build.build();
 }
 
+
 const deployUpdate = async (deploymentDescription) => {
   const config = loadConfig();
   const deployment = await createDeploymentTemplate(deploymentDescription);
+
   CORE.deployment = deployment;
   CORE.config = config;
 
@@ -89,8 +92,9 @@ const deployUpdate = async (deploymentDescription) => {
     await api.clearRoutes();
     await new Promise(resolve => setTimeout(resolve, 10000));
     const gatewayUrl = await CORE.updateLambdasAndGateway(bucket, updateData);
+    deployment.api = api;
     await CORE.deployStaticAssets(bucket);
-
+    delete deployment.api.client;
     const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
     const cloudfrontRes = await CORE.invalidateDistribution(updateData.cloudfrontId);
 
@@ -102,7 +106,7 @@ const deployUpdate = async (deploymentDescription) => {
 
   } catch (error) {
 
-    console.log("unable to complete distribution, process failed because: ", error.message);
+    console.log("unable to complete distribution, process failed because: ", error);
     console.log("initiating teardown... ");
     let teardown = new Teardown(deployment);
     await teardown.all();
@@ -117,16 +121,6 @@ const deployUpdate = async (deploymentDescription) => {
     await db.createTable(deployment.tableName)
     await db.addDeploymentToTable(deployment.tableName, deployment)
   }
-
-  console.log("the deployment: ", deployment);
-
-  // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist
 };
-// const ans = async () => {
-//   const dist = await getMostRecentDist(tableName)
-//   console.log(dist)
-
-// }
-// run();
 
 module.exports = deployUpdate;

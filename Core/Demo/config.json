@@ -1,7 +1,7 @@
 {
   "projectInfo": {
-    "projectName": "comeonbaby",
-    "projectId": "comeonbaby-d68xygxwf4"
+    "projectName": "aappappallal",
+    "projectId": "aappappallal-2jm2deb4pv"
   },
   "buildInfo": {
     "setupCommand": "npm install",
@@ -11,8 +11,8 @@
   },
   "AWSInfo": {
     "AWS_REGION": "us-east-1",
-    "bucketName": "comeonbaby-d68xygxwf4-bucket",
-    "tableName": "comeonbaby-d68xygxwf4-table",
-    "apiName": "comeonbaby-api"
+    "bucketName": "aappappallal-2jm2deb4pv-bucket",
+    "tableName": "aappappallal-2jm2deb4pv-table",
+    "apiName": "aappappallal-api"
   }
 }
