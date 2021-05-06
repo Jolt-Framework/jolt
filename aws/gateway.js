@@ -42,6 +42,13 @@ class Gateway {
     if (stageName) this.stageName = stageName;
   }
 
+  async getVersions() {
+    let versions = await this.client.getStages({
+      ApiId: this.apiId,
+    });
+
+    return versions.Items;
+  }
   /**
    * @param {string} StageName
    * @param {string} Description
@@ -81,6 +88,12 @@ class Gateway {
     }
   }
 
+  async deleteStage() {
+    await this.client.deleteStage({
+      ApiId: this.apiId,
+      StageName: this.stageName,
+    });
+  }
   /**
    * @returns {Promise<Gateway>}
    * this command will return the gateway if it is already created
@@ -205,17 +218,18 @@ class Gateway {
    * @mutation adds a new stage to the gateway
    * @returns {Promise<gateway.CreateStageCommandOutput>} returns the stage object.
    * */
-  async createStage(StageName) {
+  async createStage(stageName) {
     try {
       const stage = await this.client.createStage({
         ApiId: this.apiId,
-        StageName,
+        StageName: stageName,
       });
       // console.log("stage data: ", stage)
       this.#stages.push(stage);
+      this.stageName = stageName;
       return stage;
     } catch (error) {
-      console.log(`unable to create stage: ${StageName}`);
+      console.log(`unable to create stage: ${stageName}`);
       throw new Error(error.message);
     }
   }

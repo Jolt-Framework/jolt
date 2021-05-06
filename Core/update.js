@@ -5,12 +5,12 @@ const Builder = require("../Utilities/builder");
 const Teardown = require('../Utilities/Teardown/teardown')
 const Dynamo = require('../aws/dynamo');
 const Gateway = require("../aws/gateway");
+const attachConfig = require("../Utilities/attachConfig");
+
 let db = new Dynamo();
 
 const getConfig = () => require(process.env.PWD + "/config.json");
 
-// TODO get from config
-// const gatewayStage = "test";
 const createDeploymentTemplate = async (config) => {
   if (!config) config = getConfig();
   const { projectId: tableName, projectName } = config.projectInfo;
@@ -27,9 +27,7 @@ const createDeploymentTemplate = async (config) => {
   })
 };
 
-
 const getUpdateData = async (config) => {
-  // table: Project name(PK) || version(SK)
   const { projectId } = config.projectInfo;
   const {region} = config.AWSInfo
   let db = new Dynamo(region);
@@ -40,7 +38,7 @@ const getUpdateData = async (config) => {
   const {edgeLambdas, api, bucket, cloudfrontId} = deployment
   let dataForUpdate = {
     cloudfrontId: cloudfrontId,
-    s3: bucket, // bucket name
+    s3: bucket,
     apiId: api.apiId,
     proxyARN: edgeLambdas[0]
   }
@@ -48,6 +46,7 @@ const getUpdateData = async (config) => {
 }
 
 const removeArtifacts = async () => {
+  const config = getConfig();
   let arch = new Builder("rm -rf archives");
   await arch.build();
   let build = new Builder(`rm -rf ${config.buildInfo.buildFolder}`);
@@ -55,7 +54,6 @@ const removeArtifacts = async () => {
 }
 
 const deployUpdate = async () => {
-  attachConfig();
   const config = getConfig();
   const deployment = await createDeploymentTemplate(config);
   CORE.deployment = deployment;
@@ -68,7 +66,6 @@ const deployUpdate = async () => {
     console.log("Build completed!");
   } catch (error) {
     console.log("Failed to complete build process");
-    // console.log(error.message);
     throw new Error(error.message);
   }
 
@@ -76,7 +73,7 @@ const deployUpdate = async () => {
   deployment.deployed = false;
   const updateData = await getUpdateData(config);
 
-
+  console.log(CORE.deployment.version)
 
   try {
     const bucketName = config.AWSInfo.bucketName;
@@ -92,8 +89,9 @@ const deployUpdate = async () => {
     await api.clearRoutes();
     await new Promise(resolve => setTimeout(resolve, 10000));
     const gatewayUrl = await CORE.updateLambdasAndGateway(bucket, updateData);
+    deployment.api = api;
     await CORE.deployStaticAssets(bucket);
-
+    delete deployment.api.client;
     const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
     const cloudfrontRes = await CORE.invalidateDistribution(updateData.cloudfrontId);
 
@@ -105,7 +103,7 @@ const deployUpdate = async () => {
 
   } catch (error) {
 
-    console.log("unable to complete distribution, process failed because: ", error.message);
+    console.log("unable to complete distribution, process failed because: ", error);
     console.log("initiating teardown... ");
     let teardown = new Teardown(deployment);
     await teardown.all();
@@ -120,16 +118,6 @@ const deployUpdate = async () => {
     await db.createTable(deployment.tableName)
     await db.addDeploymentToTable(deployment.tableName, deployment)
   }
-
-  console.log("the deployment: ", deployment);
-
-  // await CORE.updateCors(domainName)// will add the permissions to api gateway from dist
 };
-// const ans = async () => {
-//   const dist = await getMostRecentDist(tableName)
-//   console.log(dist)
-
-// }
-// run();
 
 module.exports = deployUpdate;

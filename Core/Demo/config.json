@@ -1,7 +1,7 @@
 {
   "projectInfo": {
-    "projectName": "rodney-excellent-project",
-    "projectId": "rodney-excellent-project-7744pow30n"
+    "projectName": "aappappallal",
+    "projectId": "aappappallal-2jm2deb4pv"
   },
   "buildInfo": {
     "setupCommand": "npm install",
@@ -11,8 +11,8 @@
   },
   "AWSInfo": {
     "AWS_REGION": "us-east-1",
-    "bucketName": "rodney-excellent-project-7744pow30n-bucket",
-    "tableName": "rodney-excellent-project-7744pow30n-table",
-    "apiName": "rodney-excellent-project-api"
+    "bucketName": "aappappallal-2jm2deb4pv-bucket",
+    "tableName": "aappappallal-2jm2deb4pv-table",
+    "apiName": "aappappallal-api"
   }
 }

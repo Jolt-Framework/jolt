@@ -33,7 +33,7 @@ const deploymentProcess = async (deployment) => {
   deployment.bucket = bucketName;
   CORE.deployment = deployment;
 
-  const { gatewayUrl } = await CORE.deployLambdasAndGateway(bucket);
+  const gatewayUrl = await CORE.deployLambdasAndGateway(bucket);
 
   await CORE.deployStaticAssets(bucket);
 
@@ -55,6 +55,7 @@ const sendToDB = async (deployment) => {
   }
   console.log("Sending deployment info to the DynamoDB");
   let db = new Dynamo();
+  delete deployment.api.client;
   await db.createTable(deployment.tableName);
   await db.addDeploymentToTable(deployment.tableName, deployment);
   console.log("Deployment successfully recorded in DynamoDB");
@@ -98,7 +99,7 @@ const removeArtifacts = async () => {
   await arch.build();
   let build = new Builder(`rm -rf ${config.buildInfo.buildFolder}`);
   await build.build();
-} 
+}
 
 const run = async (prebuilt) => {
   if (!prebuilt) {
@@ -126,7 +127,6 @@ const run = async (prebuilt) => {
   if (!prebuilt) {
     await removeArtifacts();
   }
-  console.log("the deployment ", deployment)
 }
 
 module.exports = run;
