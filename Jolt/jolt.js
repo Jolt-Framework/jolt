@@ -173,7 +173,7 @@ class JOLT {
 
     // adds each method to each route
     for (const method of methods) {
-      await this.api.addRoute(method, funcName.replace("-", "/"), funcName);
+      await this.api.addRoute(method, funcName.replace("-", "/"), funcName, arn);
     }
   }
 

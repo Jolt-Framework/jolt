@@ -5,7 +5,8 @@ const {
   DeleteFunctionCommand,
   PublishVersionCommand,
   UpdateFunctionCodeCommand,
-  ListVersionsByFunctionCommand
+  ListVersionsByFunctionCommand,
+  UpdateFunctionConfigurationCommand
 } = require("@aws-sdk/client-lambda");
 const { version } = require("esbuild");
 const path = require('path');
@@ -86,19 +87,28 @@ class Lambda /*extends something?*/ {
           FunctionName
         }
 
-        if (secrets) {
-          params.Environment = {
-            Variables: {
-              ...secrets
-            }
-          };
+        try {
+          if (secrets) {
+            await Lambda.Client.send(new UpdateFunctionConfigurationCommand({
+              FunctionName,
+              Environment: {
+                Variables: {
+                  ...secrets,
+                }
+              }
+            }))
+          }
+        } catch (error) {
+          throw new Error(error.message);
         }
 
         result = await Lambda.Client.send(new UpdateFunctionCodeCommand(params))
         this.versioned = true;
         this.version = result.Version
         this.arn = result.FunctionArn
+        console.log(this.arn);
         return Promise.resolve(result.FunctionArn);
+
       } catch (error) {
         console.log("unable to update the function's code, \n", error.message)
       }

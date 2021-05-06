@@ -121,6 +121,8 @@ const deployUpdate = async (deploymentDescription) => {
     await db.createTable(deployment.tableName)
     await db.addDeploymentToTable(deployment.tableName, deployment)
   }
+
+  await removeArtifacts();
 };
 
 module.exports = deployUpdate;

@@ -236,19 +236,17 @@ class Gateway {
 
   #integrations = {};
 
-  async #createIntegration(functionName) {
+  async #createIntegration(functionName, arn) {
     if (this.#integrations[functionName])
       return this.#integrations[functionName];
 
-    let account = await token(this.region);
-    const functionARN = `arn:aws:lambda:${this.region}:${account}:function:${functionName}`;
     let integration;
     try {
       integration = await this.client.createIntegration({
         ApiId: this.apiId,
         IntegrationMethod: "POST",
         IntegrationType: IntegrationType.AWS_PROXY,
-        IntegrationUri: functionARN,
+        IntegrationUri: arn,
         PayloadFormatVersion: "2.0",
       });
       // console.log(" the integration: ", integration);
@@ -272,9 +270,9 @@ class Gateway {
    * @param {string} functionName the name of the lambda function
    * @returns {Promise<gateway.CreateRouteCommandOutput>}
    */
-  async addRoute(method, path, functionName) {
+  async addRoute(method, path, functionName, arn) {
     let route;
-    let integration = await this.#createIntegration(functionName);
+    let integration = await this.#createIntegration(functionName, arn);
 
 
     try {
