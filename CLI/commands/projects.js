@@ -121,7 +121,7 @@ async function selectVersion(tableName) {
   });
 
   const initialIndex = versionChoices.findIndex(choice => String(choice.value) === latestVersion);
-  console.log(initialIndex);
+
   versionChoices[initialIndex].disabled = true;
 
   const question2 = {
@@ -139,7 +139,7 @@ async function selectVersion(tableName) {
   versionChoices.push({ title: "<- Back", value: "back" });
 
   const { value: version } = await prompts(question2);
-  console.log(version)
+
   return version;
 }
 
