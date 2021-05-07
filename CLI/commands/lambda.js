@@ -12,7 +12,7 @@ const lambdaTemplate =
 exports.handler = async (event, _context, callback) => {
 
   // extract the body from event
-  const body = JSON.parse(event.body);
+  // const body = JSON.parse(event.body);
 
   // Function logic here
 
@@ -30,8 +30,8 @@ exports.handler = async (event, _context, callback) => {
     statusCode: 200,
     body: JSON.stringify({
       hello: "world"
-    }
-  })
+    }),
+  }
 }
 `;
 

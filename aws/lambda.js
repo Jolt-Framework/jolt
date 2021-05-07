@@ -88,16 +88,15 @@ class Lambda /*extends something?*/ {
         }
 
         try {
-          if (secrets) {
             await Lambda.Client.send(new UpdateFunctionConfigurationCommand({
               FunctionName,
+              Role: role,
               Environment: {
                 Variables: {
                   ...secrets,
                 }
               }
             }))
-          }
         } catch (error) {
           throw new Error(error.message);
         }
@@ -106,6 +105,7 @@ class Lambda /*extends something?*/ {
         this.versioned = true;
         this.version = result.Version
         this.arn = result.FunctionArn
+        await this.setPermissions();
         console.log(this.arn);
         return Promise.resolve(result.FunctionArn);
 
