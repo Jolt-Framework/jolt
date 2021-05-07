@@ -4,6 +4,7 @@ const Builder = require("../Utilities/builder");
 const Teardown = require("../Utilities/Teardown/teardown");
 const Dynamo = require("../aws/dynamo");
 const loadConfig = require("../Utilities/loadConfig");
+const log = console.log;
 
 const buildProcess = async () => {
   const config = loadConfig();
@@ -128,7 +129,3 @@ const run = async (deploymentDescription) => {
 }
 
 module.exports = run;
-function log(...text) {
-  log(...text);
-}
-

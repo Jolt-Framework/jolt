@@ -37,7 +37,7 @@ class JOLT {
   }
 
   static toFileName(funcName, extension) {
-    return funcName.replace("/", "-") + extension;
+    return funcName.replace(/\//g, "-") + extension;
   }
 
   static async updateProxy(cloudfrontId, proxyArn) {
@@ -173,7 +173,7 @@ class JOLT {
 
     // adds each method to each route
     for (const method of methods) {
-      await this.api.addRoute(method, funcName.replace("-", "/"), funcName, arn);
+      await this.api.addRoute(method, funcName.replace(/-/g, "/"), funcName, arn);
     }
   }
 

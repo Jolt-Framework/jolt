@@ -7,7 +7,7 @@ const Dynamo = require('../aws/dynamo');
 const Gateway = require("../aws/gateway");
 const loadConfig = require("../Utilities/loadConfig");
 let db = new Dynamo();
-
+const log = console.log;
 // TODO get from config
 // const gatewayStage = "test";
 const createDeploymentTemplate = async (description) => {
@@ -126,8 +126,4 @@ const deployUpdate = async (deploymentDescription) => {
 };
 
 module.exports = deployUpdate;
-
-function log(...text) {
-  log(...text);
-}
 

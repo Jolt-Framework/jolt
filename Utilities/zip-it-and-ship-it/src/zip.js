@@ -128,8 +128,8 @@ const zipFunctions = async function (relativeSrcFolder, destFolder) {
       await callback(currentLocation);
     } else {
       const files = fs.readdirSync(currentLocation)
-      for (let i = 0; i < files.length; i++) {
-        await walkDirs(path.join(currentLocation, files[i]), callback);
+      for (const file of files) {
+        await walkDirs(path.join(currentLocation, file), callback);
       }
     }
   }
