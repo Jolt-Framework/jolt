@@ -12,8 +12,8 @@ const lambdaTemplate =
 exports.handler = async (event, _context, callback) => {
 
   // extract the body from event
-  const body = JSON.parse(event.body);
-  
+  // const body = JSON.parse(event.body);
+
   // Function logic here
 
   // for synchronous functions
@@ -30,24 +30,31 @@ exports.handler = async (event, _context, callback) => {
     statusCode: 200,
     body: JSON.stringify({
       hello: "world"
-    }
+    }),
   }
 }
 `;
 
-const newlam = () => {
-const config = require(process.env.PWD + "/config.json");
-
+const lambda = () => {
+let config
+  try {
+    config = require(process.env.PWD + "/config.json");
+  } catch (error) {
+    return console.log(
+      "Please run 'jolt init' to initialize the project first"
+    );
+  }
   const { functionsFolder } = config.buildInfo;
-  const newFuncPath = process.argv[3];
+  if (!functionsFolder) return console.log("functions folder not specified");
+  const newFuncPath = process.argv[3].split("/").slice(0,-1).join("/");
 
   if (!newFuncPath) {
-    throw new Error("Enter a new Lambda name or multi-segment path for  a new Lambda (eg: path/to/lambdaName)");
-  } else if (functionExists(functionsFolder, newFuncPath)) {
+    throw new Error("Enter a new Lambda name or multi-segment path for a new Lambda (eg: path/to/lambdaName)");
+  } else if (functionExists(functionsFolder, process.argv[3])) {
     throw new Error("You already have a Lambda by that name in your functions folder");
   }
 
-  const functionFileName = `${path.basename(newFuncPath)}.js`;
+  const functionFileName = `${path.basename(process.argv[3])}.js`;
 
   fs.mkdir(`${functionsFolder}/${newFuncPath}`, {recursive: true}, (err) => {
     if (err) throw err;
@@ -59,4 +66,4 @@ const functionExists = (funcFolder, funcPath) => {
   return fs.existsSync(`${funcFolder}/${funcPath}`);
 }
 
-module.exports = newlam;
+module.exports = lambda;

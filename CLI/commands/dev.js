@@ -1,8 +1,20 @@
 const concurrently = require("concurrently");
 const loadConfig = require("../../Utilities/loadConfig");
 
-const loclam = async () => {
+const dev = async () => {
+  try {
+    const config = require(process.env.PWD + "/config.json");
+  } catch (error) {
+    return console.log(
+      "Please run 'jolt init' to initialize the project first"
+    );
+  }
+
   const { devServerCommand } = loadConfig().buildInfo;
+
+  if (!devServerCommand) return console.log(
+    "There is no dev server command please manually add one in config.json under buildInfo"
+  );
 
   await concurrently([
     { command:
@@ -16,4 +28,4 @@ const loclam = async () => {
   ]);
 }
 
-module.exports = loclam;
+module.exports = dev;

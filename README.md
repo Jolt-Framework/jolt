@@ -1,4 +1,4 @@
-# CORE Capstone Project
+# JOLT Capstone Project
 
 For easily deploying static websites with their own serverless compute hosted on Lambdas
 

@@ -1,9 +1,16 @@
 const Dynamo = require("../../aws/dynamo");
 const attachConfig = require("../../Utilities/attachConfig");
 const prompts = require("prompts");
-const CORE = require("../../Core/core");
+const JOLT = require("../../Jolt/jolt");
 
 const projects = async () => {
+  try {
+    const config = require(process.env.PWD + "/config.json");
+  } catch (error) {
+    return console.log(
+      "Please run 'jolt init' to initialize the project first"
+    );
+  }
   attachConfig();
 
   let questions = [selectTable, selectVersion, confirmRollback];
@@ -52,10 +59,10 @@ const projects = async () => {
             proxyARN: rollbackData.config.edgeLambdas[0],
           };
 
-          await CORE.redeployStaticAssets(bucket.bucketName, bucket.objects);
+          await JOLT.redeployStaticAssets(bucket.bucketName, bucket.objects);
           await Dynamo.updateProjectVersion(selectedTable, version);
-          await CORE.updateProxy(cloudfront.cloudfrontId, cloudfront.proxyARN);
-          await CORE.invalidateDistribution(cloudfront.cloudfrontId);
+          await JOLT.updateProxy(cloudfront.cloudfrontId, cloudfront.proxyARN);
+          await JOLT.invalidateDistribution(cloudfront.cloudfrontId);
         } else {
           i--;
         };
@@ -114,7 +121,7 @@ async function selectVersion(tableName) {
   });
 
   const initialIndex = versionChoices.findIndex(choice => String(choice.value) === latestVersion);
-  console.log(initialIndex);
+
   versionChoices[initialIndex].disabled = true;
 
   const question2 = {
@@ -132,7 +139,7 @@ async function selectVersion(tableName) {
   versionChoices.push({ title: "<- Back", value: "back" });
 
   const { value: version } = await prompts(question2);
-  console.log(version)
+
   return version;
 }
 

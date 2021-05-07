@@ -30,7 +30,7 @@ class Teardown {
     if (this.deployed || this.cloudfrontId) {
       let client = new CloudFrontWrapper(this.region);
 
-      if (numberOfVersions >= 1) {
+      if (numberOfVersions <= 1) {
         const res = await client.disableDistribution(this.cloudfrontId)
         const confirmation = await client.deleteDistribution(this.cloudfrontId, () => {
           this.handleEdgeLambda()

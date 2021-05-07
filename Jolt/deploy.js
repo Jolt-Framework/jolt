@@ -1,15 +1,16 @@
 const S3 = require("../aws/s3");
-const CORE = require("./core");
+const JOLT = require("./jolt");
 const Builder = require("../Utilities/builder");
 const Teardown = require("../Utilities/Teardown/teardown");
 const Dynamo = require("../aws/dynamo");
 const loadConfig = require("../Utilities/loadConfig");
+const log = console.log;
 
 const buildProcess = async () => {
   const config = loadConfig();
   const { buildInfo } = config;
 
-  console.log("setting up dependencies");
+  log("setting up dependencies");
   const { setupCommand, buildCommand } = buildInfo;
   const setup = new Builder(setupCommand);
   await setup.build();
@@ -17,12 +18,12 @@ const buildProcess = async () => {
   const build = new Builder(buildCommand);
   await build.build();
 
-  console.log("Build completed!");
+  log("Build completed!");
 };
 
 const deploymentProcess = async (deployment) => {
   const config = loadConfig();
-  CORE.config = config;
+  JOLT.config = config;
   const { bucketName, AWS_REGION } = config.AWSInfo;
   const { projectId } = config.projectInfo;
 
@@ -31,19 +32,19 @@ const deploymentProcess = async (deployment) => {
 
   deployment.region = AWS_REGION;
   deployment.bucket = bucketName;
-  CORE.deployment = deployment;
+  JOLT.deployment = deployment;
 
-  const gatewayUrl = await CORE.deployLambdasAndGateway(bucket);
+  const gatewayUrl = await JOLT.deployLambdasAndGateway(bucket);
 
-  await CORE.deployStaticAssets(bucket);
+  await JOLT.deployStaticAssets(bucket);
 
-  const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
-  const { distribution } = await CORE.deployToCloudFront(bucket, proxyArn, projectId);
+  const { proxyArn } = await JOLT.deployEdgeLambda(bucket, gatewayUrl);
+  const { distribution } = await JOLT.deployToCloudFront(bucket, proxyArn, projectId);
 
   deployment.cloudfrontId = distribution.Id
   const { DomainName: domainName } = distribution;
   deployment.domainName = domainName;
-  console.log("Successfully deployed application. Find it here:\n", domainName);
+  log("Successfully deployed application. Find it here:\n", domainName);
   deployment.deployed = true;
 }
 
@@ -53,26 +54,26 @@ const sendToDB = async (deployment) => {
     await teardown.all();
     return;
   }
-  console.log("Sending deployment info to the DynamoDB");
+  log("Sending deployment info to the DynamoDB");
   let db = new Dynamo();
   delete deployment.api.client;
   await db.createTable(deployment.tableName);
   await db.addDeploymentToTable(deployment.tableName, deployment);
-  console.log("Deployment successfully recorded in DynamoDB");
+  log("Deployment successfully recorded in DynamoDB");
 }
 
 
 let torn;// kept here so it's clear where it's changed
 const teardown = async (message, error, deployment) => {
   try {
-    console.log(message, error.message);
-    console.log("initiating teardown... ");
+    log(message, error.message);
+    log("initiating teardown... ");
     let teardown = new Teardown(deployment);
     await teardown.all();
     torn = true;
-    console.log("teardown completed.");
+    log("teardown completed.");
   } catch (error) {
-    console.log("unable to tear down, here is the deployment", deployment);
+    log("unable to tear down, here is the deployment", deployment);
   }
 }
 
@@ -107,7 +108,7 @@ const run = async (deploymentDescription) => {
 		await removeArtifacts();
 		await buildProcess();
 	} catch (error) {
-		return console.log("unable to build the project, error: ", error.message);
+		return log("unable to build the project, error: ", error.message);
 	}
 
   const deployment = await createDeploymentTemplate(deploymentDescription);

@@ -1,5 +1,5 @@
 const S3 = require("../aws/s3");
-const CORE = require("./core");
+const JOLT = require("./jolt");
 const uuid = require("uuid");
 const Builder = require("../Utilities/builder");
 const Teardown = require('../Utilities/Teardown/teardown')
@@ -7,7 +7,7 @@ const Dynamo = require('../aws/dynamo');
 const Gateway = require("../aws/gateway");
 const loadConfig = require("../Utilities/loadConfig");
 let db = new Dynamo();
-
+const log = console.log;
 // TODO get from config
 // const gatewayStage = "test";
 const createDeploymentTemplate = async (description) => {
@@ -60,17 +60,17 @@ const deployUpdate = async (deploymentDescription) => {
   const config = loadConfig();
   const deployment = await createDeploymentTemplate(deploymentDescription);
 
-  CORE.deployment = deployment;
-  CORE.config = config;
+  JOLT.deployment = deployment;
+  JOLT.config = config;
 
   try {
-    console.log("Building started");
+    log("Building started");
     await removeArtifacts();
     const builder = new Builder(config.buildInfo.buildCommand);
     await builder.build();
-    console.log("Build completed!");
+    log("Build completed!");
   } catch (error) {
-    console.log("Failed to complete build process");
+    log("Failed to complete build process");
     throw new Error(error.message);
   }
 
@@ -81,24 +81,24 @@ const deployUpdate = async (deploymentDescription) => {
   try {
     const bucketName = config.AWSInfo.bucketName;
     const region = config.AWSInfo.AWS_REGION;
-    const ref = "CORE-Jamstack:" + uuid.v4();
+    // const ref = "Jolt-Jamstack:" + uuid.v4();
     const bucket = new S3(bucketName);
     deployment.region = region;
     deployment.bucket = bucketName;
-    console.log("trying to update...")
+    log("trying to update...")
 
     let api = new Gateway(config.AWSInfo.apiName, region, deployment.version);
     api.apiId = updateData.apiId;
     await api.clearRoutes();
     await new Promise(resolve => setTimeout(resolve, 10000));
-    const gatewayUrl = await CORE.updateLambdasAndGateway(bucket, updateData);
+    const gatewayUrl = await JOLT.updateLambdasAndGateway(bucket, updateData);
     deployment.api = api;
-    await CORE.deployStaticAssets(bucket);
+    await JOLT.deployStaticAssets(bucket);
     delete deployment.api.client;
-    const { proxyArn } = await CORE.deployEdgeLambda(bucket, gatewayUrl);
-    const cloudfrontRes = await CORE.invalidateDistribution(updateData.cloudfrontId);
+    const { proxyArn } = await JOLT.deployEdgeLambda(bucket, gatewayUrl);
+    const cloudfrontRes = await JOLT.invalidateDistribution(updateData.cloudfrontId);
 
-    await CORE.updateProxy(updateData.cloudfrontId, proxyArn);
+    await JOLT.updateProxy(updateData.cloudfrontId, proxyArn);
 
     deployment.cloudfrontId = updateData.cloudfrontId;
 
@@ -106,12 +106,12 @@ const deployUpdate = async (deploymentDescription) => {
 
   } catch (error) {
 
-    console.log("unable to complete distribution, process failed because: ", error);
-    console.log("initiating teardown... ");
+    log("unable to complete distribution, process failed because: ", error);
+    log("initiating teardown... ");
     let teardown = new Teardown(deployment);
     await teardown.all();
     torn = true;
-    console.log("teardown completed.");
+    log("teardown completed.");
   }
 
   if (!torn && !deployment.deployed) {
@@ -121,6 +121,9 @@ const deployUpdate = async (deploymentDescription) => {
     await db.createTable(deployment.tableName)
     await db.addDeploymentToTable(deployment.tableName, deployment)
   }
+
+  await removeArtifacts();
 };
 
 module.exports = deployUpdate;
+
