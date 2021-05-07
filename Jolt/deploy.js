@@ -9,7 +9,7 @@ const buildProcess = async () => {
   const config = loadConfig();
   const { buildInfo } = config;
 
-  console.log("setting up dependencies");
+  log("setting up dependencies");
   const { setupCommand, buildCommand } = buildInfo;
   const setup = new Builder(setupCommand);
   await setup.build();
@@ -17,7 +17,7 @@ const buildProcess = async () => {
   const build = new Builder(buildCommand);
   await build.build();
 
-  console.log("Build completed!");
+  log("Build completed!");
 };
 
 const deploymentProcess = async (deployment) => {
@@ -43,7 +43,7 @@ const deploymentProcess = async (deployment) => {
   deployment.cloudfrontId = distribution.Id
   const { DomainName: domainName } = distribution;
   deployment.domainName = domainName;
-  console.log("Successfully deployed application. Find it here:\n", domainName);
+  log("Successfully deployed application. Find it here:\n", domainName);
   deployment.deployed = true;
 }
 
@@ -53,26 +53,26 @@ const sendToDB = async (deployment) => {
     await teardown.all();
     return;
   }
-  console.log("Sending deployment info to the DynamoDB");
+  log("Sending deployment info to the DynamoDB");
   let db = new Dynamo();
   delete deployment.api.client;
   await db.createTable(deployment.tableName);
   await db.addDeploymentToTable(deployment.tableName, deployment);
-  console.log("Deployment successfully recorded in DynamoDB");
+  log("Deployment successfully recorded in DynamoDB");
 }
 
 
 let torn;// kept here so it's clear where it's changed
 const teardown = async (message, error, deployment) => {
   try {
-    console.log(message, error.message);
-    console.log("initiating teardown... ");
+    log(message, error.message);
+    log("initiating teardown... ");
     let teardown = new Teardown(deployment);
     await teardown.all();
     torn = true;
-    console.log("teardown completed.");
+    log("teardown completed.");
   } catch (error) {
-    console.log("unable to tear down, here is the deployment", deployment);
+    log("unable to tear down, here is the deployment", deployment);
   }
 }
 
@@ -107,7 +107,7 @@ const run = async (deploymentDescription) => {
 		await removeArtifacts();
 		await buildProcess();
 	} catch (error) {
-		return console.log("unable to build the project, error: ", error.message);
+		return log("unable to build the project, error: ", error.message);
 	}
 
   const deployment = await createDeploymentTemplate(deploymentDescription);
@@ -128,3 +128,7 @@ const run = async (deploymentDescription) => {
 }
 
 module.exports = run;
+function log(...text) {
+  log(...text);
+}
+

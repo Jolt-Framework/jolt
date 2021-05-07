@@ -130,9 +130,9 @@ const normalizeFilePath = function (path, commonPrefix, pluginsModulesPath) {
   const pathB =
     pluginsModulesPath === undefined ? pathA : pathA.replace(pluginsModulesPath, `${ZIP_ROOT_DIR}${sep}node_modules`)
   // eslint-disable-next-line prefer-destructuring
-  // const packageName = pathB.split('node_modules/')[1].split('/')[0]
-  const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}/`)
-  // const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}${packageName}/`)
+  const packageName = pathB.split('node_modules/')[1].split('/')[0]
+  // const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}/`)
+  const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}${packageName}/`)
 
   const pathD = unixify(pathC)
 

@@ -64,13 +64,13 @@ const deployUpdate = async (deploymentDescription) => {
   JOLT.config = config;
 
   try {
-    console.log("Building started");
+    log("Building started");
     await removeArtifacts();
     const builder = new Builder(config.buildInfo.buildCommand);
     await builder.build();
-    console.log("Build completed!");
+    log("Build completed!");
   } catch (error) {
-    console.log("Failed to complete build process");
+    log("Failed to complete build process");
     throw new Error(error.message);
   }
 
@@ -85,7 +85,7 @@ const deployUpdate = async (deploymentDescription) => {
     const bucket = new S3(bucketName);
     deployment.region = region;
     deployment.bucket = bucketName;
-    console.log("trying to update...")
+    log("trying to update...")
 
     let api = new Gateway(config.AWSInfo.apiName, region, deployment.version);
     api.apiId = updateData.apiId;
@@ -106,12 +106,12 @@ const deployUpdate = async (deploymentDescription) => {
 
   } catch (error) {
 
-    console.log("unable to complete distribution, process failed because: ", error);
-    console.log("initiating teardown... ");
+    log("unable to complete distribution, process failed because: ", error);
+    log("initiating teardown... ");
     let teardown = new Teardown(deployment);
     await teardown.all();
     torn = true;
-    console.log("teardown completed.");
+    log("teardown completed.");
   }
 
   if (!torn && !deployment.deployed) {
@@ -126,3 +126,8 @@ const deployUpdate = async (deploymentDescription) => {
 };
 
 module.exports = deployUpdate;
+
+function log(...text) {
+  log(...text);
+}
+

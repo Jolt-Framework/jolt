@@ -1,15 +1,15 @@
+const fs = require("fs");
 const { resolve } = require('path')
+const path = require("path");
 
 const makeDir = require('make-dir')
-const pMap = require('p-map')
+
 
 const { getPluginsModulesPath } = require('./node_dependencies')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP } = require('./utils/consts')
-const { listFunctionsDirectory } = require('./utils/fs')
 const { removeFalsy } = require('./utils/remove_falsy')
 
-const DEFAULT_PARALLEL_LIMIT = 5
 
 const validateArchiveFormat = (archiveFormat) => {
   if (![ARCHIVE_FORMAT_NONE, ARCHIVE_FORMAT_ZIP].includes(archiveFormat)) {
@@ -46,45 +46,46 @@ const formatZipResult = (result) => {
 
 // Zip `srcFolder/*` (Node.js or Go files) to `destFolder/*.zip` so it can be
 // used by AWS Lambda
-const zipFunctions = async function (
-  relativeSrcFolder,
-  destFolder,
-  { archiveFormat = ARCHIVE_FORMAT_ZIP, config = {}, parallelLimit = DEFAULT_PARALLEL_LIMIT } = {},
-) {
-  validateArchiveFormat(archiveFormat)
 
-  const srcFolder = resolve(relativeSrcFolder)
-  const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
-  const [functions, pluginsModulesPath] = await Promise.all([
-    getFunctionsFromPaths(paths, { config, dedupe: true }),
-    getPluginsModulesPath(srcFolder),
-  ])
-  const zipped = await pMap(
-    functions.values(),
-    async (func) => {
-      const zipResult = await func.runtime.zipFunction({
-        archiveFormat,
-        config: func.config,
-        destFolder,
-        extension: func.extension,
-        filename: func.filename,
-        mainFile: func.mainFile,
-        name: func.name,
-        pluginsModulesPath,
-        runtime: func.runtime,
-        srcDir: func.srcDir,
-        srcPath: func.srcPath,
-        stat: func.stat,
-      })
+// const zipFunctions = async function (
+//   relativeSrcFolder,
+//   destFolder,
+//   { archiveFormat = ARCHIVE_FORMAT_ZIP, config = {}, parallelLimit = DEFAULT_PARALLEL_LIMIT } = {},
+// ) {
+//   validateArchiveFormat(archiveFormat)
 
-      return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
-    },
-    {
-      concurrency: parallelLimit,
-    },
-  )
-  return zipped.filter(Boolean).map(formatZipResult)
-}
+//   const srcFolder = resolve(relativeSrcFolder)
+//   const [paths] = await Promise.all([listFunctionsDirectory(srcFolder), makeDir(destFolder)])
+//   const [functions, pluginsModulesPath] = await Promise.all([
+//     getFunctionsFromPaths(paths, { config, dedupe: true }),
+//     getPluginsModulesPath(srcFolder),
+//   ])
+//   const zipped = await pMap(
+//     functions.values(),
+//     async (func) => {
+//       const zipResult = await func.runtime.zipFunction({
+//         archiveFormat,
+//         config: func.config,
+//         destFolder,
+//         extension: func.extension,
+//         filename: func.filename,
+//         mainFile: func.mainFile,
+//         name: func.name,
+//         pluginsModulesPath,
+//         runtime: func.runtime,
+//         srcDir: func.srcDir,
+//         srcPath: func.srcPath,
+//         stat: func.stat,
+//       })
+
+//       return { ...zipResult, mainFile: func.mainFile, name: func.name, runtime: func.runtime }
+//     },
+//     {
+//       concurrency: parallelLimit,
+//     },
+//   )
+//   return zipped.filter(Boolean).map(formatZipResult)
+// }
 
 const zipFunction = async function (
   relativeSrcPath,
@@ -120,5 +121,22 @@ const zipFunction = async function (
 
   return formatZipResult({ ...zipResult, mainFile, name, runtime })
 }
+
+const zipFunctions = async function (relativeSrcFolder, destFolder) {
+  const walkDirs = async (currentLocation, callback) => {
+    if (fs.statSync(currentLocation).isFile()) {
+      await callback(currentLocation);
+    } else {
+      const files = fs.readdirSync(currentLocation)
+      for (let i = 0; i < files.length; i++) {
+        await walkDirs(path.join(currentLocation, files[i]), callback);
+      }
+    }
+  }
+
+  const callback = async (src) => await zipFunction(src, destFolder);
+  await walkDirs(relativeSrcFolder, callback);
+
+};
 
 module.exports = { zipFunction, zipFunctions }
