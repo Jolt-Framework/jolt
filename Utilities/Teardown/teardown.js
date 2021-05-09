@@ -44,7 +44,10 @@ class Teardown {
     else                       this.api && await this.api.deleteStage();
 
     this.lambdas && await Lambda.teardown(this.lambdas);
-    this.files && await S3.teardown(this.bucket, this.files);
+    if (this.files) {
+      if (numberOfVersions <= 1) await S3.teardownAll(this.bucket);
+      else                       await S3.teardown(this.bucket, this.files);
+    }
   }
 
   async handleEdgeLambda() {
