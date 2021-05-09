@@ -1,4 +1,7 @@
+const { CloudFront } = require("@aws-sdk/client-cloudfront");
 const AWS = require("@aws-sdk/client-cloudfront");
+
+const cloudFrontConstants = require("../lib/constants/cloudFront");
 
 class CloudFrontWrapper {
   static distributions = {};
@@ -28,7 +31,7 @@ class CloudFrontWrapper {
       CloudFrontWrapper.distributions[reference] = Distribution;
       return Distribution;
     } catch (error) {
-      console.log("Unable to create Cloudfront distribution.");
+      console.log(cloudFrontConstants.DISTRIBUTION_CREATION_FAILED);
       throw new Error(error.message);
     }
   }
@@ -78,13 +81,13 @@ class CloudFrontWrapper {
           Id: id,
           IfMatch: ETag,
         });
-        console.log("Distribution successfully deleted:\n", confirmation);
+        console.log(cloudFrontConstants.DISTRIBUTION_DELETED, confirmation);
         if (callback) await callback();
       } catch (err) {
-        console.log("unable to delete distribution", err.message);
+        console.log(cloudFrontConstants.DISTRIBUTION_DELETION_FAILED, err.message);
       }
     } catch (error) {
-      console.log("Distribution not found.");
+      console.log(cloudFrontConstants.DISTRIBUTION_NONEXISTENT);
       return callback();
     }
   }
@@ -131,7 +134,7 @@ class CloudFrontWrapper {
 
     try {
       const { Distribution } = await this.client.updateDistribution(params);
-      console.log("Distribution successfully updated:\n", Distribution);
+      console.log(cloudFrontConstants.DISTRIBUTION_UPDATED, Distribution);
       const distribution = await AWS.waitForDistributionDeployed(
         {
           client: this.client,
@@ -141,13 +144,13 @@ class CloudFrontWrapper {
       );
       return distribution;
     } catch (error) {
-      console.log("unable to update distribution");
+      console.log(cloudFrontConstants.DISTRIBUTION_UPDATE_FAILED);
       throw new Error(error.message);
     }
   }
 
   createDistributionConfig(bucketDomainName, bucketName, proxyARN, reference) {
-    const buildFolder = "build";
+    const buildFolder = CloudFrontWrapper.config.buildInfo.buildFolder;
 
     return {
       DefaultRootObject: "index.html",
@@ -171,13 +174,13 @@ class CloudFrontWrapper {
       DefaultCacheBehavior: {
         ForwardedValues: {
           Cookies: {
-            Forward: "all", // types.ItemSelectionAll
           },
+          Forward: "all",
           QueryString: true,
         },
         MinTTL: "300",
         TargetOriginId: "S3-" + bucketName,
-        ViewerProtocolPolicy: "allow-all", // types.ViewerPolicyAllowAll
+        ViewerProtocolPolicy: "allow-all",
         AllowedMethods: {
           Items: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
           Quantity: "7",
@@ -189,7 +192,7 @@ class CloudFrontWrapper {
           {
             ForwardedValues: {
               Cookies: {
-                Forward: "all", // types.ItemSelectionAll - Allowed values: all | none | whitelist
+                Forward: "all",
               },
               QueryString: true,
             },
@@ -209,12 +212,12 @@ class CloudFrontWrapper {
             MaxTTL: "0",
             PathPattern: ".functions/*",
             TargetOriginId: "S3-" + bucketName,
-            ViewerProtocolPolicy: "allow-all", // types.ItemSelectionAll - Allowed values: all | none | whitelist
+            ViewerProtocolPolicy: "allow-all",
             LambdaFunctionAssociations: {
               Quantity: "1",
               Items: [
                 {
-                  EventType: "viewer-request", //types.EventTypeViewerRequest
+                  EventType: "viewer-request",
                   LambdaFunctionARN: proxyARN,
                   IncludeBody: true,
                 },

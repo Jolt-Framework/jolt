@@ -122,23 +122,26 @@ const zipJsFile = function ({ srcFile, commonPrefix, pluginsModulesPath, archive
   addZipFile(archive, srcFile, normalizedFilename, stat)
 }
 
+const ZIP_ROOT_DIR = 'node_modules'
+
 // `adm-zip` and `require()` expect Unix paths.
 // We remove the common path prefix.
 // With files on different Windows drives, we remove the drive letter.
 const normalizeFilePath = function (path, commonPrefix, pluginsModulesPath) {
+  if (commonPrefix.split("/").slice(-2)[0] !== "node_modules") {
+    commonPrefix = commonPrefix.split("/").slice(0,-2).join("/");
+  }
   const pathA = normalize(path)
   const pathB =
     pluginsModulesPath === undefined ? pathA : pathA.replace(pluginsModulesPath, `${ZIP_ROOT_DIR}${sep}node_modules`)
-  // eslint-disable-next-line prefer-destructuring
-  const packageName = pathB.split('node_modules/')[1].split('/')[0]
-  // const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}/`)
-  const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}${packageName}/`)
+    // const packageName = pathB.split('node_modules/')[1].split('/')[0]
+    const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}`)
+    // console.log(pathB);
+  // const pathC = pathB.replace(commonPrefix, `${ZIP_ROOT_DIR}${sep}${packageName}/`)
 
-  const pathD = unixify(pathC)
-
+  const pathD = unixify(pathC);
   return pathD
 }
 
-const ZIP_ROOT_DIR = 'node_modules'
 
 module.exports = { zipNodeJs }

@@ -8,7 +8,7 @@ const {
   ListVersionsByFunctionCommand,
   UpdateFunctionConfigurationCommand
 } = require("@aws-sdk/client-lambda");
-const { version } = require("esbuild");
+
 const path = require('path');
 const REGION = "us-east-1";
 
