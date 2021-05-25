@@ -174,8 +174,8 @@ class CloudFrontWrapper {
       DefaultCacheBehavior: {
         ForwardedValues: {
           Cookies: {
+            Forward: "all",
           },
-          Forward: "all",
           QueryString: true,
         },
         MinTTL: "300",
