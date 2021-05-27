@@ -68,14 +68,15 @@ const zipFunction = async function ({
 
 const zipWithFunctionWithFallback = async ({ config = {}, ...parameters }) => {
   // If a specific JS bundler version is specified, we'll use it.
-  if (config.nodeBundler !== JS_BUNDLER_ESBUILD_ZISI) {
-    return zipFunction({ ...parameters, config })
-  }
+  // if (config.nodeBundler !== JS_BUNDLER_ESBUILD_ZISI) {
+  //   console.log("Puerto Rico, We have a problem");
+  //   return zipFunction({ ...parameters, config })
+  // }
 
   // Otherwise, we'll try to bundle with esbuild and, if that fails, fallback
   // to zisi.
   try {
-    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: JS_BUNDLER_ESBUILD } })
+    return await zipFunction({ ...parameters, config: { ...config, nodeBundler: JS_BUNDLER_ZISI } })
   } catch (esbuildError) {
     try {
       const data = await zipFunction({ ...parameters, config: { ...config, nodeBundler: JS_BUNDLER_ZISI } })

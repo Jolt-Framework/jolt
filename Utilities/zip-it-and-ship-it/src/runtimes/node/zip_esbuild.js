@@ -1,4 +1,4 @@
-const { dirname, format, normalize, parse } = require('path')
+const { dirname, format, normalize, parse, extname } = require('path')
 
 const commonPathPrefix = require('common-path-prefix')
 
@@ -68,7 +68,7 @@ const zipEsbuild = async ({
   const supportingSrcFiles = srcFiles.filter((path) => path !== mainFile)
 
   // Normalizing the main file so that it has a .js extension.
-  const normalizedMainFile = format({ ...parse(mainFile), base: undefined, ext: '.js' })
+  const normalizedMainFile = format({ ...parse(mainFile), base: undefined, ext: extname(mainFile) })
 
   // We're adding the bundled file to the zip, but we want it to have the same
   // name and path as the original, unbundled file. For this, we use an alias.

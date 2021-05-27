@@ -71,7 +71,6 @@ const createZipArchive = async function ({
 }) {
   const destPath = join(destFolder, `${basename(toFunctionName(filename), extension)}.zip`)
   const { archive, output } = startZip(destPath)
-
   addEntryFile(basePath, archive, filename, mainFile)
 
   const srcFilesInfos = await Promise.all(srcFiles.map(addStat))
@@ -107,11 +106,16 @@ const addStat = async function (srcFile) {
 const getEntryFile = ({ filename, mainFile }) => {
   // const mainPath = normalizeFilePath(mainFile, commonPrefix)
   const extension = extname(filename)
-  const entryFilename = `${basename(toFunctionName(filename), extension)}.js`
-
+  const entryFilename = filename.includes("node_modules") ? `${basename(filename, extension)}${extension}`: `${basename(toFunctionName(filename), extension)}${extension}`
+  let path = mainFile.split("/");
+  path.splice(-1, 1, entryFilename)
+  path = path.join("/")
+  if (!path.includes("node_modules"))  {
+    path = mainFile
+  }
   return {
     // eslint-disable-next-line node/no-sync
-    contents: fs.readFileSync(mainFile).toString(),
+    contents: fs.readFileSync(path).toString(),
     filename: entryFilename,
   }
 }

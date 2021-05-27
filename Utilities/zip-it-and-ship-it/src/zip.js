@@ -101,6 +101,7 @@ const zipFunction = async function (
   }
 
   const { config, extension, filename, mainFile, name, runtime, srcDir, stat } = functions.values().next().value
+
   const pluginsModulesPath =
     defaultModulesPath === undefined ? await getPluginsModulesPath(srcPath) : defaultModulesPath
 
@@ -127,6 +128,7 @@ const zipFunctions = async function (relativeSrcFolder, destFolder) {
     if (fs.statSync(currentLocation).isFile()) {
       await callback(currentLocation);
     } else {
+      if (currentLocation.includes('node_modules')) return
       const files = fs.readdirSync(currentLocation)
       for (const file of files) {
         await walkDirs(path.join(currentLocation, file), callback);

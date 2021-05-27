@@ -65,7 +65,6 @@ const getFunctionAtPath = async function (srcPath) {
   const extension = extname(srcPath)
   const srcDir = stat.isDirectory() ? srcPath : dirname(srcPath)
   const name = toFunctionName(srcPath)
-
   return { extension, mainFile, name, srcDir, srcPath, stat }
 }
 

@@ -20,6 +20,7 @@ const getSrcFilesAndExternalModules = async function ({
   stat,
   pluginsModulesPath,
 }) {
+
   if (bundler === JS_BUNDLER_ZISI) {
     const paths = await (
       await listFilesUsingLegacyBundler({ srcPath, mainFile, srcDir, stat, pluginsModulesPath })
@@ -30,7 +31,7 @@ const getSrcFilesAndExternalModules = async function ({
       paths,
     }
   }
-  // console.log(externalNodeModules)
+
   if (externalNodeModules.length !== 0) {
     const { moduleNames, paths } = await getDependencyNamesAndPathsForDependencies({
       dependencies: externalNodeModules,
