@@ -1,12 +1,12 @@
 {
     "name": "jolt-framework",
     "description": "For easily deploying static websites with their own serverless functions hosted on AWS",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "bin": {
-        "jolt": "./CLI/cli.js"
+        "jolt": "CLI/cli.js"
     },
     "repository": {
         "type": "git",
