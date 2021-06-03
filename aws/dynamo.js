@@ -171,6 +171,19 @@ class Dynamo {
     }
   }
 
+  static async deleteItem(tableName, projectName, timeCreated) {
+    try {
+      await (new AWS.DynamoDB({region: "us-east-1"})).deleteItem({
+        TableName: tableName,
+        Key: {
+          projectName, timeCreated
+        }
+      })
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
+
   async getApiId(tableName) {
     let deployments = await this.getDeployments(tableName);
 

@@ -55,7 +55,7 @@ const destroy = async () => {
           }
           try {
             const {projectName, version} = selectedDeploymentData;
-            await Dynamo.deleteItem(selectedTable, projectName, version);
+            await Dynamo.deleteItem(selectedTable, projectName, selectedDeploymentData.timeCreated);
           } catch (error) {
             return console.log("Unable to delete from database: ", error.message)
           }
