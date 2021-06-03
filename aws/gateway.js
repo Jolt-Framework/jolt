@@ -2,7 +2,8 @@ const {
   AuthorizationType,
   IntegrationType,
 } = require("@aws-sdk/client-apigatewayv2");
-const token = require("./getAccountId");
+
+const Constants = require("../lib/constants/gateway");
 
 const gateway = require("@aws-sdk/client-apigatewayv2");
 //TODO: Make sure API is created before invoking any function besides create.
@@ -61,12 +62,9 @@ class Gateway {
         StageName,
         Description,
       });
-      // this.#stages.push(StageName);
+
       return data;
     } catch (error) {
-      console.log(
-        `Unable to deploy API gateway with an id of: ${this.apiId} to the stage: ${StageName}`
-      );
       throw new Error(error.message);
     }
   }
@@ -77,13 +75,8 @@ class Gateway {
   async deleteApi() {
     try {
       const data = await this.client.deleteApi({ ApiId: this.apiId });
-      console.log("api deleted");
       return Promise.resolve(data);
     } catch (error) {
-      console.log(
-        "Unable to delete or find API gateway with an id of: ",
-        this.apiId
-      );
       throw new Error(error.message);
     }
   }
@@ -100,37 +93,25 @@ class Gateway {
    */
   async create() {
     if (this.#created) return Promise.resolve(this);
-    const ALL = ["*"];
     let api;
     try {
       api = await this.client.createApi({
         Name: this.apiName,
         ProtocolType: gateway.ProtocolType.HTTP,
         CorsConfiguration: {
-          AllowOrigins: ALL,
-          AllowHeaders: ["content-type"],
-          AllowMethods: [
-            "GET",
-            "POST",
-            "PUT",
-            "PATCH",
-            "DELETE",
-            "HEAD",
-            "OPTIONS",
-          ],
+          AllowOrigins: Constants.ALLOWED_ORIGINS,
+          AllowHeaders: Constants.ALLOWED_HEADERS,
+          AllowMethods: Constants.ALLOWED_METHODS
         },
       });
-      this.url = api.ApiEndpoint; // TODO: might delete
+      this.url = api.ApiEndpoint;
       this.apiId = api.ApiId;
-      // console.log(api);
       this.#created = true;
       return Promise.resolve(this);
     } catch (error) {
-      console.log("Unable to create API gateway: " + this.apiName);
       throw new Error(error.message);
     }
   }
-
 
   async #getRoutes() {
     let routes;
@@ -165,7 +146,8 @@ class Gateway {
   }
 
   // WARNING: Deprecated
-  async update(apiId, lambdas) { //arns of the previous deployment.
+  async update(apiId, lambdas) {
+    //arns of the previous deployment.
     this.apiId = apiId;
     // get the routes for the api.
     // for each "Target" we have an integration path, we can either update the integration or create a new one
@@ -174,7 +156,7 @@ class Gateway {
 
     for (const integration of integrations) {
       const lambdaForIntegration = lambdas.find((arn) => {
-        arn = arn.replace(/:\d+$/, "");
+        arn = arn.replace(Constants.VERSION_REMOVAL_REGEX, Constants.EMPTY_STRING);
         return integration.IntegrationUri.match(arn);
       });
 
@@ -185,7 +167,10 @@ class Gateway {
       });
     }
 
-    await this.deploy(this.stageName, `updated integrations for ${JSON.stringify(lambdas)}`);
+    await this.deploy(
+      this.stageName,
+      Constants.INTEGRATION_UPDATE_MESSAGE + JSON.stringify(lambdas)
+    );
   }
 
   /**
@@ -194,7 +179,7 @@ class Gateway {
    * @returns */
   static async update(apiId, options) {
     let api = this.find(apiId);
-    if (!api) return console.log("gateway not found");
+    if (!api) return;
     try {
       let data = await api.client.updateApi({
         ...api,
@@ -209,7 +194,7 @@ class Gateway {
         }
       });
     } catch (error) {
-      console.log("unable to update the api. Error:", error);
+      throw new Error(error.message);
     }
   }
 
@@ -224,12 +209,10 @@ class Gateway {
         ApiId: this.apiId,
         StageName: stageName,
       });
-      // console.log("stage data: ", stage)
       this.#stages.push(stage);
       this.stageName = stageName;
       return stage;
     } catch (error) {
-      console.log(`unable to create stage: ${stageName}`);
       throw new Error(error.message);
     }
   }
@@ -244,22 +227,15 @@ class Gateway {
     try {
       integration = await this.client.createIntegration({
         ApiId: this.apiId,
-        IntegrationMethod: "POST",
+        IntegrationMethod: Constants.INTEGRATION_METHOD,
         IntegrationType: IntegrationType.AWS_PROXY,
         IntegrationUri: arn,
-        PayloadFormatVersion: "2.0",
+        PayloadFormatVersion: Constants.INTEGRATION_VERSION,
       });
-      // console.log(" the integration: ", integration);
-      // await this.#attachIntegration(route, functionName);
-      // await this.#createIntegrationResponse(integration, path, route, functionName);
+
       this.#integrations[functionName] = integration;
       return integration;
     } catch (error) {
-      console.log(
-        "The integration for function: " +
-          functionName +
-          " could not be completed."
-      );
       throw new Error(error.message);
     }
   }
@@ -274,36 +250,29 @@ class Gateway {
     let route;
     let integration = await this.#createIntegration(functionName, arn);
 
-
     try {
-        if (method === "OPTIONS") {
-          route = await this.client.createRoute({
-            ApiId: this.apiId,
-            AuthorizationType: AuthorizationType.NONE,
-            RouteKey: method + " /" + path
-          });
-        } else {
-          route = await this.client.createRoute({
-            ApiId: this.apiId,
-            AuthorizationType: AuthorizationType.NONE,
-            RouteKey: method + " /" + path,
-            Target: `integrations/${integration.IntegrationId}`,
-          });
-          // await this.#createRouteResponse(method, path, route, functionName);
-        }
-      } catch (error) {
-        console.log(
-          `The route ${path}, for function ${functionName} could not be created.`
-        );
-        throw new Error(error.message);
+      if (method === Constants.OPTIONS_METHOD) {
+        route = await this.client.createRoute({
+          ApiId: this.apiId,
+          AuthorizationType: AuthorizationType.NONE,
+          RouteKey: method + Constants.ROUTE_KEY_SEPARATOR + path,
+        });
+      } else {
+        route = await this.client.createRoute({
+          ApiId: this.apiId,
+          AuthorizationType: AuthorizationType.NONE,
+          RouteKey: method + Constants.ROUTE_KEY_SEPARATOR + path,
+          Target: `integrations/${integration.IntegrationId}`,
+        });
       }
+    } catch (error) {
+      throw new Error(error.message);
+    }
     this.#routes.push(route);
     return route;
   }
 
-  async addOptions() {
-
-  }
+  async addOptions() {}
 
   async deleteRoute(RouteKey, ApiId) {
     let data;
@@ -313,7 +282,6 @@ class Gateway {
       this.#routes = this.#routes.filter((route) => route.RouteKey !== RouteId);
       return data;
     } catch (error) {
-      console.log(`unable to remove route: ${RouteId}`);
       throw new Error(error.message);
     }
   }

@@ -1,9 +1,12 @@
 const AWS = require("@aws-sdk/client-dynamodb");
 const getAccountId = require("./getAccountId");
 
+const Constants = require("../lib/constants/DynamoConstants");
+const { DEFAULT_REGION } = require("../lib/constants/global");
+
 class Dynamo {
   static all = [];
-  constructor(region = "us-east-1") {
+  constructor(region = DEFAULT_REGION) {
     this.client = new AWS.DynamoDB({ region });
     Dynamo.all.push(this);
   }
@@ -15,29 +18,29 @@ class Dynamo {
         TableName: tableName,
         KeySchema: [
           {
-            AttributeName: "projectName",
-            KeyType: "HASH",
+            AttributeName: Constants.SCHEMA_ATTRIBUTE_PROJECT,
+            KeyType: Constants.SCHEMA_KEY_TYPES.HASH,
           },
           {
-            AttributeName: "version",
-            KeyType: "RANGE",
+            AttributeName: Constants.SCHEMA_ATTRIBUTE_VERSION,
+            KeyType: Constants.SCHEMA_KEY_TYPES.RANGE,
           },
         ],
         AttributeDefinitions: [
           {
-            AttributeName: "projectName",
-            AttributeType: "S",
+            AttributeName: Constants.SCHEMA_ATTRIBUTE_PROJECT,
+            AttributeType: Constants.SCHEMA_ATTRIBUTE_TYPES.STRING,
           },
           {
-            AttributeName: "version",
-            AttributeType: "S",
+            AttributeName: Constants.SCHEMA_ATTRIBUTE_VERSION,
+            AttributeType: Constants.SCHEMA_ATTRIBUTE_TYPES.STRING,
           },
         ],
-        BillingMode: "PAY_PER_REQUEST",
+        BillingMode: Constants.TABLE_BILLING_MODE,
         Tags: [
           {
-            Key: "Jolt-Project-Version",
-            Value: "",
+            Key: Constants.TABLE_TAG.KEY,
+            Value: Constants.TABLE_TAG.VALUE,
           },
         ],
       });
@@ -56,15 +59,12 @@ class Dynamo {
       return res;
     } catch (error) {
       switch (error.name) {
-        case "ResourceInUseException": {
+        case Constants.ERROR_RESOURCE_BUSY: {
           this.table = await this.client.describeTable({
             TableName: tableName,
           });
 
           return this.table;
-        }
-        default: {
-          console.log("table already exists, ", error.message);
         }
       }
     }
@@ -101,7 +101,7 @@ class Dynamo {
     let result = {};
     for (let index = 0; index < keys.length; index++) {
       const key = keys[index];
-      let value = items[key]["S"];
+      let value = items[key][Constants.SCHEMA_ATTRIBUTE_TYPES.STRING];
       try {
         result[key] = JSON.parse(value);
       } catch (error) {
@@ -116,7 +116,7 @@ class Dynamo {
     let result = {};
     for (let index = 0; index < keys.length; index++) {
       const key = keys[index];
-      let value = items[key]["S"];
+      let value = items[key][Constants.SCHEMA_ATTRIBUTE_TYPES.STRING];
       try {
         result[key] = JSON.parse(value);
       } catch (error) {
@@ -131,7 +131,7 @@ class Dynamo {
     let result = {};
     keys.forEach((key) => {
       let item = items[key];
-      if (typeof item !== "string") item = JSON.stringify(item);
+      if (typeof item !== Constants.TYPE_STRING) item = JSON.stringify(item);
       result[key] = { S: item };
     });
     return result;
@@ -167,7 +167,7 @@ class Dynamo {
 
       return results;
     } catch (error) {
-      console.log("error:", error.message);
+      throw new Error(error.message);
     }
   }
 
@@ -182,8 +182,8 @@ class Dynamo {
   async getNextVersionNumber(tableName) {
     const deployments = await this.getDeployments(tableName);
 
-    if (deployments === undefined) return "1";
-    if (deployments.length === 0) return "1";
+    if (deployments === undefined) return Constants.ONE_STRING;
+    if (deployments.length === 0) return Constants.ONE_STRING;
 
     const versions = deployments.map((deployment) =>
       parseInt(deployment.version, 10)
@@ -207,7 +207,7 @@ class Dynamo {
 
   static async getDeployments(tableName, region = "us-east-1") {
     try {
-      let db = new AWS.DynamoDB({region});
+      let db = new AWS.DynamoDB({ region });
       const { Items } = await db.scan({
         TableName: tableName,
       });
@@ -228,7 +228,7 @@ class Dynamo {
 
       return Promise.resolve(confirmation);
     } catch (error) {
-      console.log("unable to add items: ", error.message);
+      throw new Error(Constants.ERROR_UNABLE_TO_ADD_ITEMS + error.message);
     }
   }
 
@@ -237,14 +237,15 @@ class Dynamo {
 
     const arn = await Dynamo.#getDbArn(tableName);
 
-    await new AWS.DynamoDB({ region: Dynamo.config
-    .AWSInfo.AWS_REGION }).tagResource({
+    await new AWS.DynamoDB({
+      region: Dynamo.config.AWSInfo.AWS_REGION,
+    }).tagResource({
       ResourceArn: arn,
       Tags: [
         {
-          Key: "Jolt-Project-Version",
+          Key: Constants.TABLE_TAG.KEY,
           Value: version,
-        }
+        },
       ],
     });
   }
@@ -261,7 +262,7 @@ class Dynamo {
       ResourceArn: await Dynamo.#getDbArn(tableName),
     });
 
-    return tags.Tags.find(tag => tag.Key === "Jolt-Project-Version").Value;
+    return tags.Tags.find((tag) => tag.Key === Constants.TABLE_TAG.KEY).Value;
   }
 
   static async getProjects() {
@@ -274,8 +275,11 @@ class Dynamo {
       let tableTags = await db.listTagsOfResource({
         ResourceArn: await Dynamo.#getDbArn(tableName),
       });
-      if (tableTags.Tags.find((tag) => tag.Key === "Jolt-Project-Version")) {
-        let projectName = tableName.split("-").slice(0, -1).join("-");
+      if (tableTags.Tags.find((tag) => tag.Key === Constants.TABLE_TAG.KEY)) {
+        let projectName = tableName
+          .split(Constants.DASH_STRING)
+          .slice(0, -1)
+          .join(Constants.DASH_STRING);
 
         joltTables[projectName] = tableName;
       }

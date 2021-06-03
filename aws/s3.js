@@ -3,63 +3,62 @@ const {
   CreateBucketCommand,
   PutObjectCommand,
   GetObjectCommand,
-  ListObjectsCommand,
   DeleteBucketCommand,
-  DeleteObjectsCommand,
   HeadBucketCommand,
   PutBucketVersioningCommand,
   ListObjectVersionsCommand,
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
 
-const Mime = require('mime-types');
+const Mime = require("mime-types");
+const Constants = require("../lib/constants/S3Constants");
+const { DEFAULT_REGION } = require("../lib/constants/global");
 
 class S3 {
   static Client = new S3Client({
-    region: process.env.REGION || "us-east-1",
+    region: DEFAULT_REGION,
   });
 
   constructor(bucketName, deployment) {
     this.bucketName = bucketName;
     this.deployment = deployment;
-    // this.createBucket();
   }
   async makePublic(key) {
     let confirmation;
     try {
-      confirmation = await S3.Client.makePublic(key)
+      confirmation = await S3.Client.makePublic(key);
     } catch (error) {
-      console.log(`Unable to make this bucket public`)
+      throw new Error(Constants.ERROR_BUCKET_NOT_PUBLIC);
     }
 
-    return Promise.resolve(confirmation)
+    return Promise.resolve(confirmation);
   }
 
   async createBucket() {
     if (!(await S3.#bucketExists(this.bucketName))) {
       const bucketParams = { Bucket: this.bucketName };
 
-      console.log("Creating bucket...")
       try {
         await S3.Client.send(new CreateBucketCommand(bucketParams));
-        console.log(`Successfully created the bucket:${this.bucketName}`);
-
         try {
-          await S3.Client.send(new PutBucketVersioningCommand({
-            Bucket: this.bucketName,
-            VersioningConfiguration: {
-              Status: "Enabled"
-            }
-          }))
+          await S3.Client.send(
+            new PutBucketVersioningCommand({
+              Bucket: this.bucketName,
+              VersioningConfiguration: {
+                Status: Constants.BUCKET_VERSIONING_ENABLED,
+              },
+            })
+          );
         } catch (error) {
-          throw new Error(`Bucket versioning could not be enabled, error: ${error.message}`);
+          throw new Error(
+            Constants.ERROR_BUCKET_CANNOT_BE_VERSIONED + error.message
+          );
         }
-
       } catch (error) {
-        throw new Error(`The bucket name is already in use or it's not accessible to you, error: ${error.message}`);
+        throw new Error(
+          Constants.ERROR_BUCKET_NAME_UNAVAILABLE + error.message
+        );
       }
-    } else {
-      console.log("Bucket already exists.");
     }
   }
 
@@ -71,15 +70,15 @@ class S3 {
       ContentType: Mime.lookup(fileName),
     };
 
-    if (!!pub) objectParams.ACL = "public-read";
+    if (!!pub) objectParams.ACL = Constants.OBJECT_PUBLIC_READ_ENABLED;
 
     try {
       const res = await S3.Client.send(new PutObjectCommand(objectParams));
       const VersionId = res.VersionId;
       let Key = fileName;
-      return {Key, VersionId};
-    } catch(error) {
-      console.log(`Error occurred creating file ${fileName}:\n${error.message}`);
+      return { Key, VersionId };
+    } catch (error) {
+      throw new Error(Constants.ERROR_FILE_COULD_NOT_BE_CREATED + filename);
     }
   }
 
@@ -95,16 +94,14 @@ class S3 {
     try {
       obj = await S3.Client.send(new GetObjectCommand(objectParams));
     } catch (error) {
-      console.log("unable to get objects");
       throw new Error(error.message);
     }
 
-	
-		const streamSegments = [];
+    const streamSegments = [];
 
-		for await (let seg of obj.Body) {
+    for await (let seg of obj.Body) {
       streamSegments.push(seg);
-		}
+    }
 
     const objectBuffer = Buffer.concat(streamSegments);
 
@@ -113,30 +110,22 @@ class S3 {
 
       return res;
     } catch (error) {
-      console.log("unable to reupload the object: ")
-
       throw new Error(error.message);
     }
   }
 
   static async teardown(Bucket, Objects) {
-    console.log("deleting bucket files")
-    // given bucketName and an array of {fileName, version}
     if (Objects.length === 0) return;
     try {
-      console.log(`marking current distribution objects for deletion`);
       for (const object of Objects) {
-        await this.Client.send(new DeleteObjectCommand({
-          Bucket,
-          ...object,
-        }));
-        console.log("deleted:", object.Key)
+        await this.Client.send(
+          new DeleteObjectCommand({
+            Bucket,
+            ...object,
+          })
+        );
       }
-
-      console.log("Objects deleted");
-
     } catch (error) {
-      console.log("Deleting versioned objects failed with:\n", error.message);
       this.teardownAll(Bucket);
     }
   }
@@ -145,68 +134,41 @@ class S3 {
     try {
       const bucketParams = { Bucket };
 
-
-        let Objects = await this.Client.send(new ListObjectVersionsCommand({
+      let Objects = await this.Client.send(
+        new ListObjectVersionsCommand({
           Bucket,
-          KeyMarker: "/",
-        }));
+          KeyMarker: Constants.OBJECT_KEY_MARKER,
+        })
+      );
 
-        Objects = Objects.Versions.map(({ Key, VersionId }) => {
-          return {Key, VersionId};
-        });
+      Objects = Objects.Versions.map(({ Key, VersionId }) => {
+        return { Key, VersionId };
+      });
 
-        for (const object of Objects) {
-          await this.Client.send(new DeleteObjectCommand({
+      for (const object of Objects) {
+        await this.Client.send(
+          new DeleteObjectCommand({
             Bucket,
             ...object,
-          }));
-          console.log(`${object.Key} Marked for deletion`);
-        }
+          })
+        );
+      }
 
-
-        // const Contents = await this.Client.send(
-        //   new ListObjectsCommand(bucketParams)
-        //   );
-        // let Objects = Contents;
-        // console.log(Contents);
-        // deleteObjectsParams = { Objects: Objects.map(({ Key }) => {
-        //   return { Key, Bucket};
-        // }) }
-
-        // await this.Client.send(new DeleteObjectsCommand(deleteObjectsParams));
-        // console.log("Objects deleted");
-
-      await this.Client.send(new DeleteBucketCommand(bucketParams))
-      console.log("Bucket deleted");
-    } catch(error) {
-      console.log("Deleting bucket failed with:\n", error.message);
+      await this.Client.send(new DeleteBucketCommand(bucketParams));
+    } catch (error) {
+      throw new Error(Constants.ERROR_DELETE_BUCKET_FAILED + error.message);
     }
   }
 
   static async #bucketExists(name) {
     let response;
     try {
-      response = await S3.Client.send(new HeadBucketCommand({Bucket: name }));
+      response = await S3.Client.send(new HeadBucketCommand({ Bucket: name }));
       return true;
     } catch (error) {
       return false;
     }
-    // console.log(response);
-    // return response['$metadata'].httpStatusCode === 200;
   }
 }
-
-// const run = async () => {
-//   const bucket = await new S3("christianandowensbucket");
-//   setTimeout(() => { S3.teardown("christianandowensbucket")}, 5000)
-  // bucket.bucketExists();
-  // console.log(await S3.bucketExists("christianandowensbucket"));
-  // const fileName = "functions/hello.js";
-  // const file = fs.readFileSync(fileName);
-
-  // bucket.uploadObject(file, fileName);
-// }
-
-// run();
 
 module.exports = S3;
