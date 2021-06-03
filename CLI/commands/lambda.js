@@ -44,13 +44,12 @@ let config
       "Please run 'jolt init' to initialize the project first"
     );
   }
+  if (process.argv[3] === undefined) throw new Error("a function must be specified.")
   const { functionsFolder } = config.buildInfo;
   if (!functionsFolder) return console.log("functions folder not specified");
-  const newFuncPath = process.argv[3].split("/").slice(0,-1).join("/");
+  let newFuncPath = process.argv[3].split("/").slice(0,-1).join("/");
 
-  if (!newFuncPath) {
-    throw new Error("Enter a new Lambda name or multi-segment path for a new Lambda (eg: path/to/lambdaName)");
-  } else if (functionExists(functionsFolder, process.argv[3])) {
+  if (functionExists(functionsFolder, process.argv[3])) {
     throw new Error("You already have a Lambda by that name in your functions folder");
   }
 
