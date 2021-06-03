@@ -8,7 +8,8 @@ const update = require("./commands/update");
 const dev = require("./commands/dev");
 const lambda = require("./commands/lambda");
 // const { destroy } = require("./commands/destroy");
-const projects = require("./commands/projects");
+const projects = require("./commands/rollback");
+const remove = require("./commands/delete");
 const program = new Command();
 // const version = require("../package.json").version;
 // program.version(version).description("Jolt");
@@ -53,10 +54,15 @@ program
   .action(lambda);
 
 program
-  .command("projects")
+  .command("rollback")
   .alias("p")
-  .description("List projects and make changes.")
+  .description("Change the version of an application.")
   .action(projects);
+
+program.command("delete")
+  .alias("d")
+  .description("delete a version of an application")
+  .action(remove);
 
 // program
 //   .command("run")
