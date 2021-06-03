@@ -1,5 +1,13 @@
-const { IAM, CreateRoleCommand, AttachRolePolicyCommand, GetRoleCommand } = require("@aws-sdk/client-iam");
+const {
+  CreateRoleCommand,
+  AttachRolePolicyCommand,
+  GetRoleCommand,
+} = require("@aws-sdk/client-iam");
 const AWS = require("@aws-sdk/client-iam");
+
+const Policies = require("../lib/constants/policies");
+const Constants = require("../lib/constants/IAMConstants");
+const { DEFAULT_REGION } = require("../lib/constants/global");
 
 class IAMWrapper {
   static roles = {};
@@ -8,7 +16,7 @@ class IAMWrapper {
    *
    * @param {string} region if none is specified, the default region will be us-east-1
    */
-  constructor(region = "us-east-1") {
+  constructor(region = DEFAULT_REGION) {
     this.client = new AWS.IAM({ region });
   }
 
@@ -17,48 +25,36 @@ class IAMWrapper {
    * @param {String} roleName
    * @returns {Promise<String>}
    */
-  async createEdgeRole(edgeLambdaRoleName = "roley-poley") {
+  async createEdgeRole(edgeLambdaRoleName = Constants.EDGE_LAMBDA_ROLE_NAME) {
     let role;
     try {
-      role = await this.client.send(new GetRoleCommand({
-        RoleName: edgeLambdaRoleName,
-      }));
+      role = await this.client.send(
+        new GetRoleCommand({
+          RoleName: edgeLambdaRoleName,
+        })
+      );
       return Promise.resolve(role.Role.Arn);
-    } catch (_) {
-      console.log("Creating role: " + edgeLambdaRoleName);
-    }
+    } catch (_) {}
 
     try {
-      role = await this.client.send(new CreateRoleCommand({
-        AssumeRolePolicyDocument: `{
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Service": [
-                  "lambda.amazonaws.com",
-                  "edgelambda.amazonaws.com"
-                ]
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        }`,
-        RoleName: edgeLambdaRoleName,
-      }));
+      role = await this.client.send(
+        new CreateRoleCommand({
+          AssumeRolePolicyDocument: Policies.EdgeLambdaAssumeRoleDocumentPolicy,
+          RoleName: edgeLambdaRoleName,
+        })
+      );
     } catch (error) {
-      console.log("Error creating role:\n", error);
       throw new Error(error.message);
     }
 
     try {
-      await this.client.send(new AttachRolePolicyCommand({
-        PolicyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaRole", // need to remove hard coding
-        RoleName: edgeLambdaRoleName,
-      }));
+      await this.client.send(
+        new AttachRolePolicyCommand({
+          PolicyArn: Policies.ServiceRoleARN,
+          RoleName: edgeLambdaRoleName,
+        })
+      );
     } catch (error) {
-      console.log("Error attaching policy to role:\n", error);
       throw new Error(error.message);
     }
     await new Promise((resolve) => setTimeout(resolve, 10000));
@@ -80,64 +76,51 @@ class IAMWrapper {
   }
 
   async createLambdaRole(roleName) {
-    roleName = "LambdaExecRole";
+    roleName = Constants.LAMBDA_ROLE_NAME;
     let role;
 
     try {
-
-      role = await this.client.send(new GetRoleCommand({
-        RoleName: roleName,
-      }));
-      console.log("Role: " + roleName + " already exists")
+      role = await this.client.send(
+        new GetRoleCommand({
+          RoleName: roleName,
+        })
+      );
       return Promise.resolve(role.Role.Arn);
-    } catch (_) {
-      console.log("Creating role: " + roleName);
-    }
+    } catch (_) {}
 
     try {
-      role = await this.client.send(new CreateRoleCommand({
-        AssumeRolePolicyDocument: `{
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Effect": "Allow",
-              "Principal": {
-                "Service": [
-                  "lambda.amazonaws.com"
-                ]
-              },
-              "Action": "sts:AssumeRole"
-            }
-          ]
-        }`,
-        RoleName: roleName,
-      }));
+      role = await this.client.send(
+        new CreateRoleCommand({
+          AssumeRolePolicyDocument: Policies.LambdaAssumeRoleDocumentPolicy,
+          RoleName: roleName,
+        })
+      );
     } catch (err) {
-      console.log(err);
       throw new Error(err.message);
     }
 
     try {
-      await this.client.send(new AttachRolePolicyCommand({
-        PolicyArn: "arn:aws:iam::aws:policy/service-role/AWSLambdaRole",
-        RoleName: roleName,
-      }))
+      await this.client.send(
+        new AttachRolePolicyCommand({
+          PolicyArn: Policies.ServiceRoleARN,
+          RoleName: roleName,
+        })
+      );
     } catch (error) {
-      console.log(err);
       throw new Error(err.message);
     }
 
-    await new Promise(resolve => setTimeout(resolve, 10000));
+    await new Promise((resolve) => setTimeout(resolve, 10000));
 
     return Promise.resolve(role.Role.Arn);
   }
 
-/**
- *
- * @param {string} name if cached at runtime, policy can be found by name, otherwise there must be a second value arn
- * @param {string} arn policy can be retrieved by arn via api call, if not found, returns undefined.
- * @returns {object}  policy document.
- */
+  /**
+   *
+   * @param {string} name if cached at runtime, policy can be found by name, otherwise there must be a second value arn
+   * @param {string} arn policy can be retrieved by arn via api call, if not found, returns undefined.
+   * @returns {object}  policy document.
+   */
   async findPolicy(name, arn) {
     let policy = IAMWrapper.policies[name];
     if (!policy) {
@@ -154,18 +137,17 @@ class IAMWrapper {
    * @returns
    */
   async createRole(name, policyDocument) {
-    let role; // = await this.findRole(name)
+    let role;
 
     if (!role) {
       try {
         role = await this.client.createRole({
           RoleName: name,
           AssumeRolePolicyDocument: JSON.stringify(policyDocument),
-          Tags: [{ Key: "Jolt-Project", Value: "role" }], // come back to remove hard code
+          Tags: [{ Key: Constants.JOLT_KEY, Value: Constants.JOLT_KEY_VALUE }],
         });
         IAMWrapper.roles[name] = role;
       } catch (error) {
-        console.log(`Unable to create role: ${name}`);
         throw new Error(error.message);
       }
     }
@@ -175,30 +157,28 @@ class IAMWrapper {
   async deleteRole(roleName) {
     try {
       const confirmation = await this.client.deleteRole({ RoleName: roleName });
-      console.log("Successfully deleted role: ", roleName);
       if (confirmation) {
         delete IAMWrapper.roles[roleName];
       }
     } catch (error) {
-      console.log(`Unable to delete role: ${roleName}`);
       throw new Error(error.message);
     }
   }
 
-/**
- *
- * @param {string} name the policy name that will remove the local cached version
- * @param {string} policyArn able to delete policy only by arn remotely
- */
+  /**
+   *
+   * @param {string} name the policy name that will remove the local cached version
+   * @param {string} policyArn able to delete policy only by arn remotely
+   */
   async deletePolicy(policyName, policyArn) {
     try {
-      const confirmation = await this.client.deletePolicy({ PolicyArn: policyArn });
-      console.log("Successfully deleted the policy:\n", policyName)
+      const confirmation = await this.client.deletePolicy({
+        PolicyArn: policyArn,
+      });
       if (confirmation) {
         delete IAMWrapper.policies[policyName];
       }
     } catch (error) {
-      console.log("Unable to delete policy:\n", policyName);
       throw new Error(error.message);
     }
   }
@@ -209,10 +189,12 @@ class IAMWrapper {
    */
   async assumeRole(arn, duration) {
     try {
-      const temporaryRole = this.client.assumeRole({ RoleARN: arn, DurationSeconds: duration});
+      const temporaryRole = this.client.assumeRole({
+        RoleARN: arn,
+        DurationSeconds: duration,
+      });
       return temporaryRole;
     } catch (error) {
-      console.log(`Unable to assume role: ${arn}`); // is this supposed to log `name` or `arn`?
       throw new Error(error.message);
     }
   }
@@ -221,9 +203,11 @@ class IAMWrapper {
     let confirmation;
 
     try {
-      confirmation = this.client.detachRolePolicy({ RoleName: roleName, PolicyArn: policyArn });
+      confirmation = this.client.detachRolePolicy({
+        RoleName: roleName,
+        PolicyArn: policyArn,
+      });
     } catch (error) {
-      console.log(`Unable to detach policy from ${rolename}.`);
       throw new Error(error.message);
     }
 
@@ -233,23 +217,20 @@ class IAMWrapper {
   async createPolicyForRole(roleName, policyName, policyDoc, description) {
     let role = await this.findRole(roleName);
 
-    if (!role) throw new Error("Cannot create a policy for a role that does not exist, check to see if the role has been made.");
+    if (!role) throw new Error(Constants.ERROR_NO_ROLE);
 
-    let {Policy} = await this.client.createPolicy({
+    let { Policy } = await this.client.createPolicy({
       PolicyDocument: JSON.stringify(policyDoc),
       PolicyName: policyName,
-      Description: description
+      Description: description,
     });
 
-    console.log("Successfully created policy\n", Policy);
     IAMWrapper.policies[policyName] = Policy;
 
     const data = await this.client.attachRolePolicy({
       RoleName: roleName,
       PolicyArn: Policy.Arn,
     });
-
-    console.log("Successfully attached role to policy:\n", data);
 
     return Policy;
   }

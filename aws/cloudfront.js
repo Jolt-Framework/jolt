@@ -1,12 +1,14 @@
 const { CloudFront } = require("@aws-sdk/client-cloudfront");
 const AWS = require("@aws-sdk/client-cloudfront");
 
-const cloudFrontConstants = require("../lib/constants/cloudFront");
+const Constants = require("../lib/constants/cloudFront");
+
+const { DEFAULT_REGION } = require("../lib/constants/global");
 
 class CloudFrontWrapper {
   static distributions = {};
 
-  constructor(region = "us-east-1") {
+  constructor(region = DEFAULT_REGION) {
     this.client = new AWS.CloudFront({ region });
   }
 
@@ -20,18 +22,12 @@ class CloudFrontWrapper {
         reference
       ),
     };
-    // Tags: [ // need to add tags
-    //     {
-    //       Key: "Jolt-Project",
-    //       Value: projectName,
-    //     }
-    //   ],
+
     try {
       const { Distribution } = await this.client.createDistribution(params);
       CloudFrontWrapper.distributions[reference] = Distribution;
       return Distribution;
     } catch (error) {
-      console.log(cloudFrontConstants.DISTRIBUTION_CREATION_FAILED);
       throw new Error(error.message);
     }
   }
@@ -41,7 +37,8 @@ class CloudFrontWrapper {
       cloudfrontId
     );
 
-    DistributionConfig.CacheBehaviors.Items[0].LambdaFunctionAssociations.Items[0].LambdaFunctionARN = proxyARN;
+    DistributionConfig.CacheBehaviors.Items[0].LambdaFunctionAssociations.Items[0].LambdaFunctionARN =
+      proxyARN;
 
     const dist = await this.client.updateDistribution({
       Id: cloudfrontId,
@@ -68,7 +65,6 @@ class CloudFrontWrapper {
       });
       return { ETag, DistributionConfig: Distribution.DistributionConfig };
     } catch (error) {
-      console.log(`Distribution: ${id} does not exist`);
       throw new Error(error.message);
     }
   }
@@ -81,13 +77,11 @@ class CloudFrontWrapper {
           Id: id,
           IfMatch: ETag,
         });
-        console.log(cloudFrontConstants.DISTRIBUTION_DELETED, confirmation);
         if (callback) await callback();
       } catch (err) {
-        console.log(cloudFrontConstants.DISTRIBUTION_DELETION_FAILED, err.message);
+        throw new Error(Constants.DISTRIBUTION_DELETION_FAILED + err.message);
       }
     } catch (error) {
-      console.log(cloudFrontConstants.DISTRIBUTION_NONEXISTENT);
       return callback();
     }
   }
@@ -124,7 +118,7 @@ class CloudFrontWrapper {
     if (!DistributionConfig.Enabled) return distribution;
 
     DistributionConfig.CacheBehaviors.LambdaFunctionAssociations = {
-      Quantity: "0",
+      Quantity: Constants.ZERO_STRING,
     };
     const params = {
       Id: id,
@@ -134,7 +128,6 @@ class CloudFrontWrapper {
 
     try {
       const { Distribution } = await this.client.updateDistribution(params);
-      console.log(cloudFrontConstants.DISTRIBUTION_UPDATED, Distribution);
       const distribution = await AWS.waitForDistributionDeployed(
         {
           client: this.client,
@@ -144,7 +137,6 @@ class CloudFrontWrapper {
       );
       return distribution;
     } catch (error) {
-      console.log(cloudFrontConstants.DISTRIBUTION_UPDATE_FAILED);
       throw new Error(error.message);
     }
   }
@@ -153,71 +145,63 @@ class CloudFrontWrapper {
     const buildFolder = CloudFrontWrapper.config.buildInfo.buildFolder;
 
     return {
-      DefaultRootObject: "index.html",
+      DefaultRootObject: Constants.DEFAULT_ROOT_OBJECT,
       Enabled: this.enabled,
       Origins: {
-        Quantity: "1",
+        Quantity: Constants.ONE_STRING,
         Items: [
           {
             DomainName: bucketDomainName,
-            OriginPath: "/" + buildFolder,
-            Id: "S3-" + bucketName,
+            OriginPath: Constants.FORWARD_SLASH + buildFolder,
+            Id: Constants.BUCKET_PREFIX + bucketName,
             S3OriginConfig: {
-              OriginAccessIdentity: "",
+              OriginAccessIdentity: Constants.EMPTY_STRING,
             },
           },
         ],
       },
       CallerReference: reference,
-      PriceClass: "PriceClass_100",
-      Comment: "test deployment",
+      PriceClass: Constants.PRICE_CLASS,
+      Comment: Constants.COMMENT,
       DefaultCacheBehavior: {
         ForwardedValues: {
           Cookies: {
-            Forward: "all",
+            Forward: Constants.COOKIE_FORWARD,
           },
           QueryString: true,
         },
-        MinTTL: "300",
-        TargetOriginId: "S3-" + bucketName,
-        ViewerProtocolPolicy: "allow-all",
+        MinTTL: Constants.TIME_TO_LIVE,
+        TargetOriginId: Constants.BUCKET_PREFIX + bucketName,
+        ViewerProtocolPolicy: Constants.VIEWER_PROTOCOL_POLICY,
         AllowedMethods: {
-          Items: ["GET", "HEAD", "OPTIONS", "PUT", "PATCH", "POST", "DELETE"],
-          Quantity: "7",
+          Items: Constants.HTTP_METHODS,
+          Quantity: Constants.HTTP_METHODS.length,
         },
       },
       CacheBehaviors: {
-        Quantity: "1",
+        Quantity: Constants.ONE_STRING,
         Items: [
           {
             ForwardedValues: {
               Cookies: {
-                Forward: "all",
+                Forward: Constants.COOKIE_FORWARD,
               },
               QueryString: true,
             },
             AllowedMethods: {
-              Items: [
-                "GET",
-                "HEAD",
-                "OPTIONS",
-                "PUT",
-                "PATCH",
-                "POST",
-                "DELETE",
-              ],
-              Quantity: "7",
+              Items: Constants.HTTP_METHODS,
+              Quantity: Constants.HTTP_METHODS.length,
             },
-            MinTTL: "0",
-            MaxTTL: "0",
-            PathPattern: ".functions/*",
-            TargetOriginId: "S3-" + bucketName,
-            ViewerProtocolPolicy: "allow-all",
+            MinTTL: Constants.ZERO_STRING,
+            MaxTTL: Constants.ZERO_STRING,
+            PathPattern: Constants.FUNCTIONS_PATH_PATTERN,
+            TargetOriginId: Constants.BUCKET_PREFIX + bucketName,
+            ViewerProtocolPolicy: Constants.VIEWER_PROTOCOL_POLICY,
             LambdaFunctionAssociations: {
-              Quantity: "1",
+              Quantity: Constants.ONE_STRING,
               Items: [
                 {
-                  EventType: "viewer-request",
+                  EventType: Constants.LAMBDA_EVENT_TYPE,
                   LambdaFunctionARN: proxyARN,
                   IncludeBody: true,
                 },

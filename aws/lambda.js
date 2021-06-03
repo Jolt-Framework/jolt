@@ -6,17 +6,19 @@ const {
   PublishVersionCommand,
   UpdateFunctionCodeCommand,
   ListVersionsByFunctionCommand,
-  UpdateFunctionConfigurationCommand
+  UpdateFunctionConfigurationCommand,
 } = require("@aws-sdk/client-lambda");
 
-const path = require('path');
-const REGION = "us-east-1";
+const path = require("path");
+const { DEFAULT_REGION } = require("../lib/constants/global");
+
+const Constants = require("../lib/constants/LambdaConstants");
 
 /** For creating and working with Lambda Functions
-  * @class
-  */
+ * @class
+ */
 class Lambda /*extends something?*/ {
-  static Client = new LambdaClient({ region: REGION });
+  static Client = new LambdaClient({ region: DEFAULT_REGION });
 
   static all = [];
 
@@ -49,7 +51,10 @@ class Lambda /*extends something?*/ {
    * @return {Promise<String>} The arn of the newly created Lambda
    */
   async create(role, secrets) {
-    const FunctionName = path.basename(this.S3Key, ".zip");
+    const FunctionName = path.basename(
+      this.S3Key,
+      Constants.FUNCTION_ARCHIVE_EXTENSION
+    );
 
     const lambdaParams = {
       Code: {
@@ -58,59 +63,64 @@ class Lambda /*extends something?*/ {
       },
       Publish: true,
       FunctionName,
-      Handler: `${FunctionName}.handler`,
+      Handler: `${FunctionName}${Constants.FUNCTION_HANDLER_EXTENSION}`,
       Role: role,
-      Runtime: "nodejs12.x",
+      Runtime: Constants.FUNCTION_RUNTIME,
     };
 
     if (secrets) {
       lambdaParams.Environment = {
         Variables: {
-          ...secrets
-        }
+          ...secrets,
+        },
       };
     }
 
     let result;
     try {
-      result = await Lambda.Client.send(new CreateFunctionCommand(lambdaParams));
+      result = await Lambda.Client.send(
+        new CreateFunctionCommand(lambdaParams)
+      );
       this.arn = result.FunctionArn;
       await this.setPermissions();
       return Promise.resolve(result.FunctionArn);
     } catch (err) {
       try {
-        console.log(err.message + ". Updating function...");
         let params = {
           Publish: true,
           S3Bucket: this.S3Bucket,
           S3Key: this.S3Key,
-          FunctionName
-        }
+          FunctionName,
+        };
 
         try {
-            await Lambda.Client.send(new UpdateFunctionConfigurationCommand({
+          await Lambda.Client.send(
+            new UpdateFunctionConfigurationCommand({
               FunctionName,
               Role: role,
               Environment: {
                 Variables: {
                   ...secrets,
-                }
-              }
-            }))
+                },
+              },
+            })
+          );
         } catch (error) {
           throw new Error(error.message);
         }
 
-        result = await Lambda.Client.send(new UpdateFunctionCodeCommand(params))
+        result = await Lambda.Client.send(
+          new UpdateFunctionCodeCommand(params)
+        );
         this.versioned = true;
-        this.version = result.Version
-        this.arn = result.FunctionArn
+        this.version = result.Version;
+        this.arn = result.FunctionArn;
         await this.setPermissions();
-        console.log(this.arn);
         return Promise.resolve(result.FunctionArn);
-
       } catch (error) {
-        console.log("unable to update the function's code, \n", error.message)
+        throw new Error(
+          Constants.ERROR_UNABLE_TO_UPDATE_FUNCTION_CODE + error.message
+        );
       }
     }
   }
@@ -121,11 +131,12 @@ class Lambda /*extends something?*/ {
    */
   async deployVersion() {
     try {
-      const func = await Lambda.Client.send(new PublishVersionCommand({ FunctionName: this.arn }));
+      const func = await Lambda.Client.send(
+        new PublishVersionCommand({ FunctionName: this.arn })
+      );
       this.version = func.Version;
       return Promise.resolve(true);
     } catch (error) {
-      console.log(error);
       throw new Error(error.message);
     }
   }
@@ -137,36 +148,36 @@ class Lambda /*extends something?*/ {
     try {
       const params = {
         FunctionName: this.arn,
-        StatementId: "thisisalambda",
-        Action: 'lambda:InvokeFunction',
-        Principal: 'apigateway.amazonaws.com',
-      }
+        StatementId: Constants.LAMBDA_PERMISSION_STATEMENT_ID,
+        Action: Constants.LAMBDA_PERMISSION_ACTION,
+        Principal: Constants.LAMBDA_PERMISSION_PRINCIPAL,
+      };
       await Lambda.Client.send(new AddPermissionCommand(params));
-    } catch (err) {
-      console.log("Error adding permissions to lambda.", err);
-    };
-  };
+    } catch (err) {}
+  }
 
   // Maybe look into deleting "event source mappings" to remove triggers after deleting a Lambda? Or something...
   /**
    * Delete an individual Lambda (Should be private... Shhhh... Don't tell anyone!)
    * @param {string} arn - The name/resource number of the Lambda
-  */
+   */
   static async #delete(arn) {
     try {
       const params = {
-        FunctionName: arn
-      }
+        FunctionName: arn,
+      };
       await Lambda.Client.send(new DeleteFunctionCommand(params));
     } catch (error) {
-      console.log("Error deleting the lambda: ", error.message);
-      if(!error.message.includes("edge-proxy"))throw new Error(error.message)
+      if (!error.message.includes(Constants.EDGE_PROXY_ERROR))
+        throw new Error(error.message);
     }
   }
 
   static async #getVersions(arn) {
-    arn = arn.replace(/:\d+$/, "");
-    let details = await Lambda.Client.send(new ListVersionsByFunctionCommand({FunctionName: arn}));
+    arn = arn.replace(Constants.VERSION_REMOVAL_REGEX, Constants.EMPTY_STRING);
+    let details = await Lambda.Client.send(
+      new ListVersionsByFunctionCommand({ FunctionName: arn })
+    );
 
     return details.Versions;
   }
@@ -174,18 +185,19 @@ class Lambda /*extends something?*/ {
   /**
    * Teardown all Lambdas when project is deleted
    * @param {array}
-  */
+   */
   static async teardown(lambdaList) {
-    console.log("Deleting lambdas...");
     for (let index = 0; index < lambdaList.length; index++) {
       let arn = lambdaList[index];
-      let versionlessARN = arn.replace(/:\d+$/, "");
+      let versionlessARN = arn.replace(
+        Constants.VERSION_REMOVAL_REGEX,
+        CONSTANTS.EMPTY_STRING
+      );
 
-      if (await Lambda.#getVersions(versionlessARN).length > 1) arn = versionlessARN;
+      if ((await Lambda.#getVersions(versionlessARN).length) > 1)
+        arn = versionlessARN;
       await Lambda.#delete(arn);
     }
-
-    console.log("Successfully deleted all lambdas");
   }
 }
 
