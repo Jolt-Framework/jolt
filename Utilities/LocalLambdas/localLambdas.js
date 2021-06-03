@@ -68,7 +68,8 @@ const logRequest = (req, _, next) => {
 }
 
 const runLocalLambdas = () => {
-  const { functionsFolder, functionsPort } = loadConfig().buildInfo;
+  const { functionsFolder } = loadConfig().buildInfo;
+  const functionsPort = 3001;
   console.log(functionsPort,functionsFolder);
   const app = express();
 
@@ -101,7 +102,7 @@ const runLocalLambdas = () => {
         // For lambda creators to return their own custom errors
         if (lambdaErr) {
           console.log(lambdaResponse.body)
-          res.status(500).send(JSON.stringify(lambdaErr)); 
+          res.status(500).send(JSON.stringify(lambdaErr));
         } else {
           try {
             // Ensuring that the response body was stringified
@@ -115,7 +116,7 @@ const runLocalLambdas = () => {
             .send(lambdaResponse.body || "");
           } catch (err) {
             console.log(err.message);
-            res.status(500).send({error:err.message}); 
+            res.status(500).send({error:err.message});
           }
         }
       }
