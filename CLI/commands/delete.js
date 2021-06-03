@@ -12,7 +12,7 @@ const destroy = async () => {
     );
   }
   attachConfig();
-  let questions = [selectTable, selectVersion, confirmRollback];
+  let questions = [selectTable, selectVersion, confirmDelete];
   let currentQuestion;
   let selectedTable;
   let version;
@@ -48,7 +48,7 @@ const destroy = async () => {
            - (if versions.length === 1, delete table?)
           */
           try {
-            let teardown = Teardown(selectedDeploymentData);
+            let teardown = new Teardown(selectedDeploymentData);
             await teardown.all()
           } catch (error) {
             return console.log("Unable to delete deployment: ", error.message)
@@ -80,9 +80,9 @@ const destroy = async () => {
     }
   }
 };
-async function confirmRollback(version) {
+async function confirmDelete(version) {
   return await confirm(
-    "Are you sure you want to revert to version: " + version
+    "Are you sure you want to delete version " + version
   );
 }
 async function confirm(message) {

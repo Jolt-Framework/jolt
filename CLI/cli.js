@@ -60,7 +60,7 @@ program
   .action(projects);
 
 program.command("delete")
-  .alias("d")
+  .alias("del")
   .description("delete a version of an application")
   .action(remove);
 

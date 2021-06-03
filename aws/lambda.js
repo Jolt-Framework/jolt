@@ -191,7 +191,7 @@ class Lambda /*extends something?*/ {
       let arn = lambdaList[index];
       let versionlessARN = arn.replace(
         Constants.VERSION_REMOVAL_REGEX,
-        CONSTANTS.EMPTY_STRING
+        Constants.EMPTY_STRING
       );
 
       if ((await Lambda.#getVersions(versionlessARN).length) > 1)
