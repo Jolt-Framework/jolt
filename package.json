@@ -1,7 +1,7 @@
 {
     "name": "jolt-framework",
     "description": "For easily deploying static websites with their own serverless functions hosted on AWS",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
