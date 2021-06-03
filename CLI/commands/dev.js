@@ -18,7 +18,7 @@ const dev = async () => {
 
   await concurrently([
     { command:
-      `node $(npm root jolt-framework)/Utilities/LocalLambdas/localLambdas.js`,
+      `node $(npm root -g)/jolt-framework/Utilities/LocalLambdas/localLambdas.js`,
       name: "Local Lambda Server",
     },
     {
