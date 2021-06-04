@@ -2,23 +2,22 @@ const concurrently = require("concurrently");
 const loadConfig = require("../../Utilities/loadConfig");
 
 const dev = async () => {
+  let devServerCommand;
+
   try {
-    const config = require(process.env.PWD + "/config.json");
+    devServerCommand = loadConfig().devServerInfo.devServerCommand;
   } catch (error) {
     return console.log(
       "Please run 'jolt init' to initialize the project first"
     );
   }
 
-  const { devServerCommand } = loadConfig().buildInfo;
-
   if (!devServerCommand) return console.log(
     "There is no dev server command please manually add one in config.json under buildInfo"
   );
 
   await concurrently([
-    { command:
-      `node $(npm root -g)/jolt-framework/Utilities/LocalLambdas/localLambdas.js`,
+    { command:  `jolt functions`,
       name: "Local Lambda Server",
     },
     {

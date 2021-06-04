@@ -2,10 +2,11 @@
 
 const { Command } = require('commander');
 const init = require('./commands/init');
-// const { help } = require("./commands/help");
 const deploy = require("./commands/deploy");
 const update = require("./commands/update");
 const dev = require("./commands/dev");
+const runFunctions = require("./commands/runFunctions");
+
 const lambda = require("./commands/lambda");
 // const { destroy } = require("./commands/destroy");
 const projects = require("./commands/rollback");
@@ -43,9 +44,20 @@ program
 
 program
   .command("dev")
-  .alias("v")
   .description("Creates a local testing environment that runs application and serverless functions")
   .action(dev);
+
+program
+  .command("functions")
+  .alias("f")
+  .description("Run lambdas locally from your functions folder")
+  .action(runFunctions);
+
+program
+  .command("rollback")
+  .alias("r")
+  .description("Change the version of an application.")
+  .action(projects);
 
 program
   .command("lambda")
@@ -53,17 +65,15 @@ program
   .description("Generate a new lambda function handler in your functions folder")
   .action(lambda);
 
-program
-  .command("rollback")
-  .alias("p")
-  .description("Change the version of an application.")
-  .action(projects);
-
 program.command("delete")
   .alias("del")
   .description("delete a version of an application")
   .action(remove);
 
+program.on('command:*', (command) => {
+  console.log(`Command '${command}' not recognized`);
+  program.help();
+})
 // program
 //   .command("run")
 //   .alias("r")
