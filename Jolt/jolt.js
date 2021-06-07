@@ -9,6 +9,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 const { zipFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
 const uniqueId = require("../Utilities/nanoid");
+const fetchLocalSecrets = require("../Utilities/fetchLocalSecrets");
 const S3 = require("../aws/s3");
 
 class JOLT {
@@ -130,28 +131,13 @@ class JOLT {
     }
 
   }
-  /**
-   *   @param {S3Object} bucket the bucket client created by new S3
-   *   @param {string} func the name of the function
-   *   @param {LambdaRole} lambdaRole the lambda role
-   */
-
-  static fetchLocalSecrets (funcPath, funcName) {
-    const envPath = path.dirname(funcPath) + "/.env";
-
-    if (fs.existsSync(envPath)) {
-      return dotenv.parse(fs.readFileSync(envPath));
-    } else {
-      console.log(`No .env file found for function: ${funcName}`);
-    }
-  }
 
   static async deployLambda(func, bucket, lambdaRole) {
     const funcName = path.basename(func, ".zip");
     const funcPath = `archives/${func}`;
 
     let functionsFolder = this.config.buildInfo.functionsFolder;
-    let secrets = this.fetchLocalSecrets(functionsFolder + "/" + func.replace("-", "/"), funcName)
+    let secrets = fetchLocalSecrets(functionsFolder + "/" + func.replace("-", "/"), funcName)
     let zippedFileBuffer = fs.readFileSync(funcPath);
 
     await bucket.uploadObject(zippedFileBuffer, funcPath);

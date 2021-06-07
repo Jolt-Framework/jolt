@@ -5,20 +5,24 @@ const uniqueId = require('../../Utilities/nanoid');
 const { writeFileSync } = require("fs");
 
 const init = async () => {
-  const answers = await userPrompts();
-  createConfigFile(answers);
-  setupLambdaTestProxying();
-}
+  let JSONpackage;
 
-const setupLambdaTestProxying = () => {
-  const packJSON = require(process.env.PWD + "/package.json");
-  if (!packJSON) {
-    console.log("package.json not found in project. You currently aren't configured to proxy requests to Local Lambdas")
+  try {
+    JSONpackage = require(process.env.PWD + "/package.json");
+  } catch (err) {
+    console.log("package.json not found in project. Please initialize this project with npm first");
+    return;
   }
 
-  packJSON.proxy = "http://localhost:3001";
+  const answers = await userPrompts();
+  createConfigFile(answers);
+  setupLambdaTestProxying(JSONpackage);
+}
 
-  fs.writeFileSync("package.json", JSON.stringify(packJSON, null, 2));
+const setupLambdaTestProxying = (JSONpackage) => {
+  JSONpackage.proxy = "http://localhost:3001";
+
+  fs.writeFileSync("package.json", JSON.stringify(JSONpackage, null, 2));
 }
 
 const createConfigFile = (configData) => {
@@ -71,6 +75,12 @@ const userPrompts = async () => {
     },
     {
       type: "text",
+      name: "devServerCommand",
+      message: `What command do you use to run your local development server (e.g.: npm start, npm run dev)?`,
+      initial: "npm start",
+    },
+    {
+      type: "text",
       name: "AWS_REGION",
       message: "Please enter a valid AWS region (e.g us-east-1)",
       initial: "us-east-1",
@@ -117,31 +127,33 @@ const formatForConfig = (results) => {
     buildCommand,
     functionsFolder,
     buildFolder,
+    devServerCommand,
     AWS_REGION,
   } = results;
 
   const projectId = `${projectName}-${uniqueId()}`;
 
-  return {
-    projectInfo: {
-      projectName,
-      projectId
-    },
-    buildInfo: {
-      setupCommand,
-      buildCommand,
-      functionsFolder,
-      buildFolder,
-    },
-    AWSInfo: {
-      AWS_REGION,
-      bucketName: projectId + "-bucket".toLowerCase(),
-      tableName: projectId + "-table".toLowerCase(),
-      apiName: projectName + "-api",
-      // gatewayStage: "test",
-      // gatewayDescription: "test"
-    }
-  }
+	return {
+		projectInfo: {
+			projectName,
+			projectId
+		},
+		buildInfo: {
+			setupCommand,
+			buildCommand,
+			functionsFolder,
+			buildFolder,
+		},
+		devServerInfo: {
+			devServerCommand,
+			functionServerPort: 3001
+		},
+		AWSInfo: {
+			AWS_REGION,
+			bucketName: projectId + "-bucket".toLowerCase(),
+			apiName: projectName + "-api",
+		}
+	}
 }
 
 module.exports = init;

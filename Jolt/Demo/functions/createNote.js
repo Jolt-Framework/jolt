@@ -4,8 +4,7 @@ const query = faunadb.query;
 
 exports.handler = async (event, context, callback) => {
   const data = JSON.parse(event.body);
-  console.log(event)
-  console.log(data)
+
   let res;
   try {
     const client = new faunadb.Client({
@@ -18,7 +17,7 @@ exports.handler = async (event, context, callback) => {
         {data: data}
       )
     );
-    console.log(res);
+
     return {statusCode: 200, body: JSON.stringify({ id: res.ref.id,  ...res.data })};
   } catch (error) {
     console.log("There was an error:");
