@@ -78,7 +78,8 @@ class S3 {
       let Key = fileName;
       return { Key, VersionId };
     } catch (error) {
-      throw new Error(Constants.ERROR_FILE_COULD_NOT_BE_CREATED + filename);
+      console.log(error);
+      throw new Error(Constants.ERROR_FILE_COULD_NOT_BE_CREATED + fileName);
     }
   }
 

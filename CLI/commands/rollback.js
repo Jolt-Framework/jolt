@@ -11,6 +11,7 @@ const projects = async () => {
       "Please run 'jolt init' to initialize the project first"
     );
   }
+
   attachConfig();
 
   let questions = [selectTable, selectVersion, confirmRollback];
@@ -59,10 +60,13 @@ const projects = async () => {
             proxyARN: rollbackData.config.edgeLambdas[0],
           };
 
+          console.log(`\x1b[33m◌\x1b[0m Rolling back...`);
           await JOLT.redeployStaticAssets(bucket.bucketName, bucket.objects);
           await Dynamo.updateProjectVersion(selectedTable, version);
           await JOLT.updateProxy(cloudfront.cloudfrontId, cloudfront.proxyARN);
           await JOLT.invalidateDistribution(cloudfront.cloudfrontId);
+          console.log(`\x1b[32m✔\x1b[0m Rollback complete!`);
+          console.log(`It may take some time for the rollback to fully propagate across CloudFront`);
         } else {
           i--;
         };

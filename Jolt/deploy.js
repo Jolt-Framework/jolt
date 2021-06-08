@@ -4,21 +4,23 @@ const Builder = require("../Utilities/builder");
 const Teardown = require("../Utilities/Teardown/teardown");
 const Dynamo = require("../aws/dynamo");
 const loadConfig = require("../Utilities/loadConfig");
-const log = console.log;
+const log = (text) => console.log(`\x1b[32m✔\x1b[0m ${text}`);
+const errlog = (text) => console.log(`\x1b[31m✘\x1b[0m ${text}`);
 
 const buildProcess = async () => {
   const config = loadConfig();
   const { buildInfo } = config;
 
-  log("setting up dependencies");
+  log("Installing dependencies...");
   const { setupCommand, buildCommand } = buildInfo;
   const setup = new Builder(setupCommand);
   await setup.build();
+  log("Dependencies installed");
 
   const build = new Builder(buildCommand);
   await build.build();
 
-  log("Build completed!");
+  log("Build completed");
 };
 
 const deploymentProcess = async (deployment) => {
@@ -44,7 +46,7 @@ const deploymentProcess = async (deployment) => {
   deployment.cloudfrontId = distribution.Id
   const { DomainName: domainName } = distribution;
   deployment.domainName = domainName;
-  log("Successfully deployed application. Find it here:\n", domainName);
+  log(`Successfully deployed application. View it here: ${domainName}`);
   deployment.deployed = true;
 }
 
@@ -54,7 +56,7 @@ const sendToDB = async (deployment) => {
     await teardown.all();
     return;
   }
-  log("Sending deployment info to the DynamoDB");
+  log("Sending deployment info to DynamoDB...");
   let db = new Dynamo();
   delete deployment.api.client;
   await db.createTable(deployment.tableName);
@@ -66,14 +68,14 @@ const sendToDB = async (deployment) => {
 let torn;// kept here so it's clear where it's changed
 const teardown = async (message, error, deployment) => {
   try {
-    log(message, error.message);
-    log("initiating teardown... ");
+    errlog(message, error.message);
+    errlog("Initiating teardown... ");
     let teardown = new Teardown(deployment);
     await teardown.all();
     torn = true;
-    log("teardown completed.");
+    log("Teardown completed.");
   } catch (error) {
-    log("unable to tear down, here is the deployment", deployment);
+    errlog(`Unable to tear down: Deployment details:${deployment}`);
   }
 }
 
@@ -108,7 +110,7 @@ const run = async (deploymentDescription) => {
 		await removeArtifacts();
 		await buildProcess();
 	} catch (error) {
-		return log("unable to build the project, error: ", error.message);
+		return errlog("Unable to build the project, error:", error.message);
 	}
 
   const deployment = await createDeploymentTemplate(deploymentDescription);
@@ -116,16 +118,17 @@ const run = async (deploymentDescription) => {
     await deploymentProcess(deployment);
   } catch (error) {
     torn = true;
-    return teardown("unable to provision resources", error, deployment);
+    return teardown("Unable to provision resources", error, deployment);
   }
 
   try {
     if(!torn) await sendToDB(deployment);
   } catch (error) {
-    return teardown("unable to store deployment in the database", error, deployment);
+    return teardown("Unable to store deployment in the database", error, deployment);
   }
 
   await removeArtifacts();
+  log("Deployment complete!");
 }
 
 module.exports = run;
