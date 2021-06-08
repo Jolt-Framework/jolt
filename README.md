@@ -15,13 +15,13 @@ Jolt is a framework for testing and deploying JAMstack apps with serverless func
       paste the isnto the contents of `src/App.js`
       ```jsx
       function App() {
-        return (
-          <script>
-            fetch(".functions/helloWorld").then(res => console.log(res))
-          </script>
-        );
+        fetch(".functions/helloWorld")
+          .then(res => res.json()
+            .then(data => alert(JSON.stringify(data))
+          )
+        )
+        return <h1>Hello World!</h1>;
       }
-
       export default App;
       ```
   3. Create a functions folder
@@ -35,7 +35,13 @@ Jolt is a framework for testing and deploying JAMstack apps with serverless func
       ```
   5. Add helloWorld function
 
+      ```sh
+      jolt lambda helloWorld
+      ```
+  6. Test the application
 
       ```sh
-      jolt mklam
+      jolt dev
       ```
+
+To demo a larger app, use our `jolt-notes` repository.
