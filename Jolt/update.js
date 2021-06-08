@@ -7,9 +7,9 @@ const Dynamo = require('../aws/dynamo');
 const Gateway = require("../aws/gateway");
 const loadConfig = require("../Utilities/loadConfig");
 let db = new Dynamo();
-const log = console.log;
-// TODO get from config
-// const gatewayStage = "test";
+const log = (text) => console.log(`\x1b[32m✔\x1b[0m ${text}`);
+const errlog = (text) => console.log(`\x1b[31m✘\x1b[0m ${text}`);
+
 const createDeploymentTemplate = async (description) => {
   const config = loadConfig();
 
@@ -64,13 +64,13 @@ const deployUpdate = async (deploymentDescription) => {
   JOLT.config = config;
 
   try {
-    log("Building started");
+    log("Building started...");
     await removeArtifacts();
     const builder = new Builder(config.buildInfo.buildCommand);
     await builder.build();
-    log("Build completed!");
+    log("Building complete");
   } catch (error) {
-    log("Failed to complete build process");
+    errlog("Failed to complete build process");
     throw new Error(error.message);
   }
 
@@ -85,7 +85,7 @@ const deployUpdate = async (deploymentDescription) => {
     const bucket = new S3(bucketName);
     deployment.region = region;
     deployment.bucket = bucketName;
-    log("trying to update...")
+    log("Trying to update...")
 
     let api = new Gateway(config.AWSInfo.apiName, region, deployment.version);
     api.apiId = updateData.apiId;
@@ -106,12 +106,12 @@ const deployUpdate = async (deploymentDescription) => {
 
   } catch (error) {
 
-    log("unable to complete distribution, process failed because: ", error);
-    log("initiating teardown... ");
+    errlog("Unable to complete update, process failed because: ", error);
+    errlog("Initiating teardown... ");
     let teardown = new Teardown(deployment);
     await teardown.all();
     torn = true;
-    log("teardown completed.");
+    log("Teardown completed");
   }
 
   if (!torn && !deployment.deployed) {
@@ -121,6 +121,8 @@ const deployUpdate = async (deploymentDescription) => {
     await db.createTable(deployment.tableName)
     await db.addDeploymentToTable(deployment.tableName, deployment)
   }
+
+  log("Update complete!");
 
   await removeArtifacts();
 };

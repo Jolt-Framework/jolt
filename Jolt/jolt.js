@@ -11,6 +11,7 @@ const { zipFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
 const uniqueId = require("../Utilities/nanoid");
 const fetchLocalSecrets = require("../Utilities/fetchLocalSecrets");
 const S3 = require("../aws/s3");
+const log = (text) => console.log(`\x1b[32m✔\x1b[0m ${text}`);
 
 class JOLT {
   static #deployment;
@@ -66,7 +67,7 @@ class JOLT {
     const iam = new Iam(AWS_REGION);
     const lambdaRole = await iam.createLambdaRole();
     await api.clearRoutes();
-    console.log('Creating functions and API gateway...');
+    log('Creating functions and API gateway...');
 
     // gets all functions from functions folder and zips them into an 'archives' folder
     await zipFunctions(functionsFolder, "archives");
@@ -106,7 +107,7 @@ class JOLT {
     const iam = new Iam(AWS_REGION);
     const lambdaRole = await iam.createLambdaRole();
 
-    console.log('Creating functions and API gateway...');
+    log('Creating Lambdas and API Gateway...');
 
     // gets all functions from functions folder and zips them into an 'archives' folder
 
@@ -161,6 +162,8 @@ class JOLT {
     for (const method of methods) {
       await this.api.addRoute(method, funcName.replace(/-/g, "/"), funcName, arn);
     }
+
+    log(`Created Lambda: ${funcName}`);
   }
 
   static toFuncName(path) {
@@ -173,14 +176,14 @@ class JOLT {
   static async deployStaticAssets(bucket) {
     const { buildInfo } = this.config;
     const { buildFolder } = buildInfo;
-    console.log("Adding files...")
+    log("Uploading static assets to S3...")
     await walkDirs(buildFolder, async (path) => {
       let data = fs.readFileSync(path);
       const file = await bucket.uploadObject(data, path, true);
       if (file) JOLT.#deployment.files.push(file);
     });
 
-    console.log("All files added.");
+    log("All assets uploaded");
   }
 
   static createProxy(gatewayUrl) {
@@ -211,14 +214,14 @@ class JOLT {
     const zipper = new Zip();
     const func = this.createProxy(gatewayUrl);
 
-    console.log("Creating edge lambda...");
+    log("Creating Edge Lambda...");
 
     zipper.addFile(`edge-proxy.js`, Buffer.alloc(func.length, func));
     const proxy = zipper.toBuffer();
 
     await bucket.uploadObject(proxy, `edge-proxy.zip`);
     const iam = new Iam();
-    const edgeArn = await iam.createEdgeRole("therole");
+    const edgeArn = await iam.createEdgeRole("jolt-edge-role");
 
     const edgelambda = new Lambda(bucket.bucketName, `edge-proxy.zip`);
     let proxyArn = await edgelambda.create(edgeArn);
@@ -228,7 +231,7 @@ class JOLT {
     }
     JOLT.#deployment.edgeLambdas.push(proxyArn);
 
-    console.log("Edge lambda successfully deployed");
+    log("Edge Lambda successfully deployed");
     return Promise.resolve({ proxyArn });
   }
 
