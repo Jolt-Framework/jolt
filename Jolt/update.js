@@ -106,7 +106,7 @@ const deployUpdate = async (deploymentDescription) => {
 
   } catch (error) {
 
-    errlog("Unable to complete update, process failed because: ", error);
+    errlog(`Unable to complete update, process failed because: ${error.message}`);
     errlog("Initiating teardown... ");
     let teardown = new Teardown(deployment);
     await teardown.all();

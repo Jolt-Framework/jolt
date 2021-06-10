@@ -68,14 +68,14 @@ const sendToDB = async (deployment) => {
 let torn;// kept here so it's clear where it's changed
 const teardown = async (message, error, deployment) => {
   try {
-    errlog(message, error.message);
-    errlog("Initiating teardown... ");
+    errlog(`${message}: ${error.message}`);
+    errlog("Initiating teardown...");
     let teardown = new Teardown(deployment);
     await teardown.all();
     torn = true;
     log("Teardown completed.");
   } catch (error) {
-    errlog(`Unable to tear down: Deployment details:${deployment}`);
+    errlog(`Unable to tear down: Deployment details: ${deployment}`);
   }
 }
 
@@ -110,7 +110,7 @@ const run = async (deploymentDescription) => {
 		await removeArtifacts();
 		await buildProcess();
 	} catch (error) {
-		return errlog("Unable to build the project, error:", error.message);
+		return errlog(`Unable to build the project, error: ${error.message}`);
 	}
 
   const deployment = await createDeploymentTemplate(deploymentDescription);

@@ -97,6 +97,7 @@ class CloudFrontWrapper {
         },
       },
     });
+
     let newRes = await AWS.waitForInvalidationCompleted(
       {
         maxWaitTime: 300,

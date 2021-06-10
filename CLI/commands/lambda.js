@@ -1,22 +1,29 @@
 const fs = require("fs");
 const path = require("path");
+const log = (text) => console.log(`\x1b[32m✔\x1b[0m ${text}`);
+const errlog = (text) => console.log(`\x1b[31m✘\x1b[0m ${text}`);
 
 const lambdaTemplate =
 `// This is a generic template for a lambda function
 
-// Note: This is the asynchronous variety of Lambda.
-//       Asynchronous processes within the function should use await syntax or promises.
-//       For async processes that use the event loop (such as with setTimeout),
-//       you can use the the callback function parameter to return once the process has completed
+// Note: This template is for asynchronous Lambdas.
+//       Asynchronous processes within the function should use await syntax or 
+//       promises.
 
-exports.handler = async (event, _context, callback) => {
+//       For async processes that use the event loop (such as setTimeout), you 
+//       can use the the callback function parameter to return once the process
+//       has completed.
 
-  // extract the body from event
+exports.handler = async (event, context, callback) => {
+
+  // To extract the body from event
   // const body = JSON.parse(event.body);
 
-  // Function logic here
+  // Function logic here...
 
-  // for synchronous functions
+  // For synchronous functions use the callback function argument to return a
+  // response.
+
   // callback<Error, Response>
   // callback(null, {
   //   statusCode: 200,
@@ -24,8 +31,9 @@ exports.handler = async (event, _context, callback) => {
   //     hello: "world"
   //   })
 
-  // For async functions use return value.
-  // Note: body property must be valid JSON and should be stringified before it is returned
+  // For async functions use a normal return value.
+  // Note: Body property must be valid JSON and should be stringified before it
+  // is returned.
   return {
     statusCode: 200,
     body: JSON.stringify({
@@ -44,25 +52,33 @@ let config
       "Please run 'jolt init' to initialize the project first"
     );
   }
-  if (process.argv[3] === undefined) throw new Error("a function must be specified.")
-  const { functionsFolder } = config.buildInfo;
-  if (!functionsFolder) return console.log("functions folder not specified");
-  let newFuncPath = process.argv[3].split("/").slice(0,-1).join("/");
-
-  if (functionExists(functionsFolder, process.argv[3])) {
-    throw new Error("You already have a Lambda by that name in your functions folder");
+  if (process.argv[3] === undefined) {
+    errlog("A function name must be specified in the format \"optional/path/to/functionName\".");
+    return;
   }
 
+  const { functionsFolder } = config.buildInfo;
+
+  if (!functionsFolder) return errlog("Functions folder not specified");
+
+  let newFuncPath = process.argv[3].split("/").slice(0,-1).join("/");
   const functionFileName = `${path.basename(process.argv[3])}.js`;
+
+  if (functionExists(functionsFolder, newFuncPath, functionFileName)) {
+    errlog("You already have a Lambda by that name in your functions folder");
+    return;
+  }
 
   fs.mkdir(`${functionsFolder}/${newFuncPath}`, {recursive: true}, (err) => {
     if (err) throw err;
     fs.writeFileSync(`${functionsFolder}/${newFuncPath}/${functionFileName}`, lambdaTemplate);
   });
+
+  log(`Function created: ${newFuncPath}/${functionFileName}`)
 }
 
-const functionExists = (funcFolder, funcPath) => {
-  return fs.existsSync(`${funcFolder}/${funcPath}`);
+const functionExists = (funcFolder, newFuncPath, funcFileName) => {
+  return fs.existsSync(`${funcFolder}/${newFuncPath}/${funcFileName}`);
 }
 
 module.exports = lambda;
