@@ -2,7 +2,7 @@
 
 # Jolt is a framework for developing, deploying, and maintaining JAMstack applications with serverless functions.
 
-For an in-depth look at JAMstack + Serverless and to learn how we built Jolt, read our whitepaper [here](https://github.com/Jolt-Framework/jolt-framework.github.io).
+For an in-depth look at JAMstack + Serverless and to learn how we built Jolt, read our whitepaper [here](https://jolt-framework.github.io).
 
 ## Table of Contents
 - [Jolt Commands](https://github.com/Jolt-Framework/jolt/blob/main/README.md#jolt-commands)
