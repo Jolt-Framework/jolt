@@ -13,8 +13,7 @@ Jolt is a framework for developing, deploying, and maintaing JAMstack applicatio
 
 | Command | Description |
 | `jolt init` | Initialize an application for use with Jolt: Prompts the user to answer a series of questions about the application. Answers are stored in a local configuration file that Jolt references while running other commands. |
-|-|-|
-|`jolt dev`|Spins up the user’s front end development server + Lambda development server in order to allow the full application to be run locally.|
+| `jolt dev`|Spins up the user’s front end development server + Lambda development server in order to allow the full application to be run locally. |
 |-|-|
 |`jolt functions`| Spins up the Lambda development server by itself.| 
 |-|-|
