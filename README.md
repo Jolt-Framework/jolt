@@ -2,6 +2,8 @@
 	<img src="https://github.com/Jolt-Framework/jolt-framework.github.io/blob/main/images/logo/color_logo.svg"/>
 </div>
 
+<span style="display:block;text-align:center">![Jolt Logo](https://github.com/Jolt-Framework/jolt-framework.github.io/blob/main/images/logo/color_logo.svg)</span>
+
 # Jolt is a framework for developing, deploying, and maintaining JAMstack applications with serverless functions.
 
 For an in-depth look at JAMstack + Serverless and to learn how we built Jolt, read our whitepaper [here](https://jolt-framework.github.io).
