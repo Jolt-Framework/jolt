@@ -47,7 +47,7 @@ Jolt is a framework for developing, deploying, and maintaing JAMstack applicatio
 
 2. Create an application.
 
-**- Example:**
+**Example:**
 ```sh
 npx create-react-app jolt-first-project
 cd jolt-first-project
@@ -67,15 +67,16 @@ export default App;
 ```
 
 3. Create Serverless Functions
+
 - This is the directory where serverless functions are defined
 
-**- Example:**
+**Example:**
 ```sh
 mkdir functions
 ```
 
 4. Initialize the application with Jolt
-**- Example:**
+**Example:**
 ```sh
 jolt init
 # For the simple demo app, all of the default options can be used
@@ -98,13 +99,13 @@ jolt init
 
 ### Function Templates
 - Use `jolt lambda [path/to/function/name.js]` to automatically create a function and any needed directories inside your `functions` folder
-**- Example: **
+**Example: **
 ```sh
 jolt lambda hello/world
 ```
 
 5. Local Development Server
-**- Example:**
+**Example:**
 	```sh
 	jolt dev
 	# Application can be viewed at `localhost:3000`
@@ -121,7 +122,7 @@ jolt lambda hello/world
 
 6. Deployment
 - Once you've verified that the application works as intended, it's time to deploy it.
-**- Example:**
+**Example:**
 ```sh
 jolt deploy
 ```
@@ -131,7 +132,7 @@ jolt deploy
 
 7. Updating
 - Under the hood, a different process is used to update the application, but from a user's perspective, updating works just like deployment
-**- Example:**
+**Example:**
 ```sh
 # For the demo: Add some additional text to `App.js` to see the update take effect.
 jolt update
@@ -140,7 +141,7 @@ jolt update
 8. Performing a Rollback 
 - Revert the application to a different version
 - The selected version can be any version of the application, forwards or backwards.
-**- Example:**
+**Example:**
 ```sh
 jolt rollback
 ```
