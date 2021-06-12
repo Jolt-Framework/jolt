@@ -1,6 +1,6 @@
 {
     "name": "jolt-framework",
-    "description": "For easily deploying static websites with their own serverless functions hosted on AWS",
+    "description": "For easily developing, deploying, and managing static websites with their own serverless functions hosted on AWS",
     "version": "1.0.5",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,14 +10,14 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/core-jamstack/Core-Full.git"
+        "url": "git+https://github.com/Jolt-Framework/jolt"
     },
     "author": "Ezra Ellette, Rodney Matambo, Owen Lenz, Christian Larwood",
     "license": "ISC",
     "bugs": {
-        "url": "https://github.com/core-jamstack/Core-Full/issues"
+        "url": "https://github.com/Jolt-Framework/jolt/issues"
     },
-    "homepage": "https://github.com/core-jamstack/Core-Full#readme",
+    "homepage": "https://github.com/Jolt-Framework/jolt/#readme",
     "dependencies": {
         "@aws-sdk/client-apigatewayv2": "^3.13.1",
         "@aws-sdk/client-cloudfront": "^3.13.1",
