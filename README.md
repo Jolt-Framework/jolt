@@ -118,7 +118,7 @@ jolt init
 
 - Use `jolt lambda [path/to/function/name.js]` to automatically create a function and any needed directories inside your `functions` folder
 
-**Example: **
+**Example:**
 
 ```sh
 jolt lambda hello/jolt
