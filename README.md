@@ -40,10 +40,13 @@ Jolt is a framework for developing, deploying, and maintaing JAMstack applicatio
 
 ## Getting Started
 1. Install Jolt
-`npm i -g jolt-framework`
+```sh
+npm i -g jolt-framework
+```
 
-~ Note: All Jolt commands should be run from the route of the application
-~ Demo: Each "Example" below will guide you through building a simple demo app that interfaces with a single serverless function. Once set up, this app can be deployed with Jolt.
+Note: All Jolt commands should be run from the route of the application
+
+Demo: Each "Example" below will guide you through building a simple demo app that interfaces with a single serverless function. Once set up, this app can be deployed with Jolt.
 
 2. Create an application.
 
@@ -95,10 +98,13 @@ jolt init
 
 ### Invoking Serverless Functions
 - Functions can be invoked in your front-end application with the `.functions` path prefix
-- Example: the `/hello/world` function can be invoked with `fetch('/.functions/hello/world')`
+- 
+**Example:**
+- The `/hello/world` function can be invoked with `fetch('/.functions/hello/world')`
 
 ### Function Templates
 - Use `jolt lambda [path/to/function/name.js]` to automatically create a function and any needed directories inside your `functions` folder
+
 **Example: **
 ```sh
 jolt lambda hello/world
@@ -114,7 +120,8 @@ jolt dev
 2. Spins up a local Lambda server on port 3001 that
 3. Front-end requests to functions will be proxied to appropriate Lambda
 4. The local Lambda server can also be spun up by itself
-- **Example:**
+
+**Example:**
 ```sh
 jolt functions
 ```
@@ -140,6 +147,7 @@ jolt update
 8. Performing a Rollback 
 - Revert the application to a different version
 - The selected version can be any version of the application, forwards or backwards.
+
 **Example:**
 ```sh
 jolt rollback
@@ -147,4 +155,3 @@ jolt rollback
 1. Select from a list of all applications deployed with Jolt on the current AWS account
 2. Select a version for the chosen application
 3. Confirm to begin the rollback (may take a while).
-
