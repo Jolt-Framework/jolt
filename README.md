@@ -1,4 +1,4 @@
-<img style="max-width: 300px; text-align: center" src="https://github.com/Jolt-Framework/jolt-framework.github.io/blob/main/images/logo/color_logo.svg"/>
+<img style="max-width: 100px; align: center" src="https://github.com/Jolt-Framework/jolt-framework.github.io/blob/main/images/logo/color_logo.svg"/>
 
 # Jolt is a framework for developing, deploying, and maintaining JAMstack applications with serverless functions.
 
