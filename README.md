@@ -25,18 +25,17 @@ Jolt is a framework for developing, deploying, and maintaing JAMstack applicatio
 ## Prerequisites
 - AWS Account
 - AWS credentials saved locally
-  - Via the [AWS CLI](https://aws.amazon.com/cli/):
-	1. Run `aws configure` and follw the prompts
-
-- Manually without AWS CLI
-	1. Run the following `mkdir ~/.aws && touch ~/.aws/credentials`
-	2. Open `~/.aws/credentials` and set it up in the following format
-	```
-	[default]
-
-	aws_access_key_id = [access_key]
-	aws_secret_access_key = [secret_access_key]
-	```
+	- Via the [AWS CLI](https://aws.amazon.com/cli/):
+		1. Run `aws configure` and follw the prompts
+	- Manually without AWS CLI
+		1. Run the following `mkdir ~/.aws && touch ~/.aws/credentials`
+		2. Open `~/.aws/credentials` and set it up in the following format
+		```
+		[default]
+	
+		aws_access_key_id = [access_key]
+		aws_secret_access_key = [secret_access_key]
+		```
 
 ## Getting Started
 1. Install Jolt
