@@ -48,38 +48,38 @@ Jolt is a framework for developing, deploying, and maintaing JAMstack applicatio
 2. Create an application.
 
 **- Example:**
-	```sh
-	npx create-react-app jolt-first-project
-	cd jolt-first-project
-	```
-
+```sh
+npx create-react-app jolt-first-project
+cd jolt-first-project
+```
 	- Replace the contents of `src/App.js` with:
-		```jsx
-		function App() {
-			fetch(".functions/hello/world")
-				.then(res => res.json()
-					.then(data => alert(JSON.stringify(data))
-				)
+	```jsx
+	function App() {
+		fetch(".functions/hello/world")
+			.then(res => res.json()
+				.then(data => alert(JSON.stringify(data))
 			)
-			return <h1>Hello World!</h1>;
-		}
+		)
+		return <h1>Hello World!</h1>;
+	}
 
-		export default App;
-		```
+	export default App;
+	```
 
 3. Create Serverless Functions
-- This is the directory where serverless functions are defined 
+- This is the directory where serverless functions are defined
+
 **- Example:**
-	```sh
-	mkdir functions
-	```
+```sh
+mkdir functions
+```
 
 4. Initialize the application with Jolt
 **- Example:**
-	```sh
-	jolt init
-	# For the simple demo app, all of the default options can be used
-	```
+```sh
+jolt init
+# For the simple demo app, all of the default options can be used
+```
 -  Guides you through a series of questions to gather the information Jolt needs to manage and deploy your application
 
 ## Working With Functions
