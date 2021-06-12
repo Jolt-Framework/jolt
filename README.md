@@ -26,17 +26,17 @@ Jolt is a framework for developing, deploying, and maintaing JAMstack applicatio
 - AWS Account
 - AWS credentials saved locally
   - Via the [AWS CLI](https://aws.amazon.com/cli/):
-		1. Run `aws configure` and follw the prompts
+	1. Run `aws configure` and follw the prompts
 
-	- Manually without AWS CLI
-		1. Run the following `mkdir ~/.aws && touch ~/.aws/credentials`
-		2. Open `~/.aws/credentials` and set it up in the following format
-		```
-		[default]
+- Manually without AWS CLI
+	1. Run the following `mkdir ~/.aws && touch ~/.aws/credentials`
+	2. Open `~/.aws/credentials` and set it up in the following format
+	```
+	[default]
 
-		aws_access_key_id = [access_key]
-		aws_secret_access_key = [secret_access_key]
-		```
+	aws_access_key_id = [access_key]
+	aws_secret_access_key = [secret_access_key]
+	```
 
 ## Getting Started
 1. Install Jolt
@@ -44,9 +44,9 @@ Jolt is a framework for developing, deploying, and maintaing JAMstack applicatio
 npm i -g jolt-framework
 ```
 
-Note: All Jolt commands should be run from the route of the application
+**Note:** All Jolt commands should be run from the route of the application
 
-Demo: Each "Example" below will guide you through building a simple demo app that interfaces with a single serverless function. Once set up, this app can be deployed with Jolt.
+**Demo:** Each "**Example**" below will guide you through building a simple demo app that interfaces with a single serverless function. Once set up, this app can be deployed with Jolt.
 
 2. Create an application.
 
