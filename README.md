@@ -1,6 +1,6 @@
 <img src="https://github.com/Jolt-Framework/jolt-framework.github.io/blob/main/images/logo/color_logo.svg"/>
 
-Jolt is a framework for developing, deploying, and maintaining JAMstack applications with serverless functions.
+# Jolt is a framework for developing, deploying, and maintaining JAMstack applications with serverless functions.
 
 For an in-depth look at JAMstack + Serverless and to learn how we built Jolt, read our whitepaper [here](https://github.com/Jolt-Framework/jolt-framework.github.io).
 
@@ -97,7 +97,7 @@ jolt init
 
 ## Working With Functions
 
-### ### Creating Serverless Functions
+### Creating Serverless Functions
 - Define all serverless function files within the `functions` directory that lives in the root of your application
 - Functions are defined as `.js` files 
 - The URL path that the function will be deployed at is the relative path the function has within your `functions` folder
@@ -125,6 +125,7 @@ jolt lambda hello/jolt
 ```
 
 ## Local Development Server
+
 **Example:**
 
 ```sh
@@ -137,6 +138,7 @@ jolt dev
 4. The local Lambda server can also be spun up by itself
 
 **Example:**
+
 ```sh
 jolt functions
 ```
@@ -171,9 +173,11 @@ jolt update
 - The selected version can be any version of the application, forwards or backwards.
 
 **Example:**
+
 ```sh
 jolt rollback
 ```
+
 1. Select from a list of all applications deployed with Jolt on the current AWS account
 2. Select a version for the chosen application
 3. Confirm to begin the rollback (this may take a while)
@@ -184,7 +188,7 @@ jolt rollback
 - Warning: This is permanent. The application and all prior versions of it will be lost
 
 **Example:**
+
 ```sh
 jolt teardown
 ```
-
