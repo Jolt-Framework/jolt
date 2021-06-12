@@ -86,12 +86,12 @@ jolt init
 ## Working With Functions
 
 ### Creating Serverless Functions
-	- Define all serverless function files within your `functions` directory that lives in the root of your application
-	- Functions are defined as `.js` files 
-	- The URL path that the function will be deployed at is the relative path the function has within your `functions` folder
-	- For instance:
-		- To create a function that will become a Lambda at the relative path `/hello-world` define the function in `functions/hello-world.js`
-		- To create a function with the relative path `/hello/world`, define the function in `functions/hello/world.js`
+- Define all serverless function files within your `functions` directory that lives in the root of your application
+- Functions are defined as `.js` files 
+- The URL path that the function will be deployed at is the relative path the function has within your `functions` folder
+- For instance:
+	- To create a function that will become a Lambda at the relative path `/hello-world` define the function in `functions/hello-world.js`
+	- To create a function with the relative path `/hello/world`, define the function in `functions/hello/world.js`
 
 ### Invoking Serverless Functions
 - Functions can be invoked in your front-end application with the `.functions` path prefix
@@ -106,19 +106,18 @@ jolt lambda hello/world
 
 5. Local Development Server
 **Example:**
-	```sh
-	jolt dev
-	# Application can be viewed at `localhost:3000`
-	```
-	1. Spins up a React development server on port 3000
-	2. Spins up a local Lambda server on port 3001 that
-	3. Front-end requests to functions will be proxied to appropriate Lambda
-	4. The local Lambda server can also be spun up by itself
-	- **Example:**
-	```sh
-	jolt functions
-	```
-
+```sh
+jolt dev
+# Application can be viewed at `localhost:3000`
+```
+1. Spins up a React development server on port 3000
+2. Spins up a local Lambda server on port 3001 that
+3. Front-end requests to functions will be proxied to appropriate Lambda
+4. The local Lambda server can also be spun up by itself
+- **Example:**
+```sh
+jolt functions
+```
 
 6. Deployment
 - Once you've verified that the application works as intended, it's time to deploy it.
