@@ -12,21 +12,15 @@ Jolt is a framework for developing, deploying, and maintaing JAMstack applicatio
 ## Jolt Commands
 
 | Command | Description |
+|-|-|
 | `jolt init` | Initialize an application for use with Jolt: Prompts the user to answer a series of questions about the application. Answers are stored in a local configuration file that Jolt references while running other commands. |
 | `jolt dev`|Spins up the user’s front end development server + Lambda development server in order to allow the full application to be run locally. |
-|-|-|
 |`jolt functions`| Spins up the Lambda development server by itself.| 
-|-|-|
 |`jolt deploy`| Deploys the application on AWS.|
-|-|-|
 |`jolt update`| Builds and deploys the latest version of a previously deployed application. The underlying infrastructure is reused wherever possible.|
-|-|-|
 |`jolt rollback`| Prompts the user to select from a list of versions associated with the current application. Once a version is selected, the front end and Lambdas are reverted to that version.|
-|-|-|
 |`jolt destroy`| Removes an application and all of its associated AWS infrastructure|
-|-|-|
 |`jolt lambda [function_name]`| Creates a Lambda template in the functions folder with the specified function_name`|
-|-|-|
 
 ## Prerequisites
 - AWS Account
