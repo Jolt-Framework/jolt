@@ -193,7 +193,7 @@ class JOLT {
       let url = "${gatewayUrl}/" + path;
 
       callback(null, {
-        status: '307',
+        status: '308',
         statusDescription: 'Temporary Redirect',
         headers: {
             location: [{
