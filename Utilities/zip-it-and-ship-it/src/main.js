@@ -5,15 +5,28 @@ const { getPluginsModulesPath } = require('./node_dependencies')
 const { getFunctionsFromPaths } = require('./runtimes')
 const { listFunctionsDirectory } = require('./utils/fs')
 const { zipFunction, zipFunctions } = require('./zip')
+const walkDirs = require("../../walkDirs");
 
 // List all Netlify Functions main entry files for a specific directory
+// const listFunctions = async function (relativeSrcFolder) {
+//   const srcFolder = resolve(relativeSrcFolder)
+//   const paths = await listFunctionsDirectory(srcFolder)
+//   const functions = await getFunctionsFromPaths(paths)
+//   const listedFunctions = [...functions.values()].map(getListedFunction)
+//   return listedFunctions
+// }
+
+// Jolt version for local Lambdas.
 const listFunctions = async function (relativeSrcFolder) {
-  const srcFolder = resolve(relativeSrcFolder)
-  const paths = await listFunctionsDirectory(srcFolder)
-  const functions = await getFunctionsFromPaths(paths)
-  const listedFunctions = [...functions.values()].map(getListedFunction)
-  return listedFunctions
+  const functionList = [];
+  const callback = async (src) => {
+    functionList.push(src);
+  };
+
+  await walkDirs(relativeSrcFolder, callback);
+  return functionList;
 }
+
 
 // List all Netlify Functions files for a specific directory
 const listFunctionsFiles = async function (relativeSrcFolder, { config } = {}) {

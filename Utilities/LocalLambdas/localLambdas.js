@@ -18,7 +18,7 @@ const runLocalLambdas = (functionServerPort, functionsFolder) => {
   app.all("/.functions/*", async (req, res) => {
     let functionName = req.url.replace(/^\/\.functions\//, "");
 
-    const functionPath = req.funcMap[functionName];
+    const functionPath = "/" + req.funcMap[functionName];
 
     if (!functionPath) {
       res.status(404).send({

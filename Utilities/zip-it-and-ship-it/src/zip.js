@@ -3,6 +3,7 @@ const { resolve } = require('path')
 const path = require("path");
 
 const makeDir = require('make-dir')
+const walkDirs = require('../../walkDirs')
 
 
 const { getPluginsModulesPath } = require('./node_dependencies')
@@ -124,18 +125,6 @@ const zipFunction = async function (
 }
 
 const zipFunctions = async function (relativeSrcFolder, destFolder) {
-  const walkDirs = async (currentLocation, callback) => {
-    if (fs.statSync(currentLocation).isFile()) {
-      await callback(currentLocation);
-    } else {
-      if (currentLocation.includes('node_modules')) return
-      const files = fs.readdirSync(currentLocation)
-      for (const file of files) {
-        await walkDirs(path.join(currentLocation, file), callback);
-      }
-    }
-  }
-
   const callback = async (src) => await zipFunction(src, destFolder);
   await walkDirs(relativeSrcFolder, callback);
 

@@ -67,7 +67,7 @@ class JOLT {
     const iam = new Iam(AWS_REGION);
     const lambdaRole = await iam.createLambdaRole();
     await api.clearRoutes();
-    log('Creating functions and API gateway...');
+    log('Updating Lambdas and API gateway...');
 
     // gets all functions from functions folder and zips them into an 'archives' folder
     await zipFunctions(functionsFolder, "archives");

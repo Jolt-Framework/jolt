@@ -6,9 +6,12 @@ const attachLocalFunctionPaths = (functionsFolder) => {
     const functions = await listFunctions(functionsFolder)
 
     req.funcMap = functions.reduce((funcMap, currentFunc) => {
-      const funcName = currentFunc.name.replace(path.extname(currentFunc.name), "");
+      const funcName = currentFunc
+        .replace(path.extname(currentFunc), "")
+        .replace(/^functions\//g, "");
 
-      funcMap[funcName] = currentFunc.mainFile;
+
+      funcMap[funcName] = `${process.env.PWD}/${currentFunc}`;
 
       return funcMap;
     }, {});

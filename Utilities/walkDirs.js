@@ -5,9 +5,12 @@ const walkDirs = async (currentLocation, callback) => {
   if (fs.statSync(currentLocation).isFile()) {
     await callback(currentLocation);
   } else {
+    if (currentLocation.includes('node_modules')) return;
+
     const files = fs.readdirSync(currentLocation)
-    for (let i = 0; i < files.length; i++) {
-      await walkDirs(path.join(currentLocation, files[i]), callback);
+
+    for (const file of files) {
+      await walkDirs(path.join(currentLocation, file), callback);
     }
   }
 }
