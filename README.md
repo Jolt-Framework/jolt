@@ -109,10 +109,7 @@ jolt init
  ### Invoking Serverless Functions
 
 - Functions can be invoked in your front-end application with the `.functions` path prefix
-
-**Example:**
-
-- The `/hello/world` function can be invoked with `fetch('/.functions/hello/jolt')`
+- ie: The `/hello/jolt` function can be invoked with `fetch('/.functions/hello/jolt')`
 
 ### Function Templates
 
