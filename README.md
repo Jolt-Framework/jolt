@@ -48,7 +48,7 @@ For an in-depth look at JAMstack + Serverless and to learn how we built Jolt, re
 ```sh
 npm i -g jolt-framework
 ```
-
+ 
 **Note:** All Jolt commands should be run from the route of the application
 
 **Demo:** Each "**Example**" below will guide you through building a simple demo app that interfaces with a single serverless function. Once set up, this app can be deployed with Jolt.
