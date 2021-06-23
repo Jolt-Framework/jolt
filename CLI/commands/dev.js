@@ -17,11 +17,12 @@ const dev = async () => {
   );
 
   await concurrently([
-    { command:  `jolt functions`,
+    {
+      command: "jolt functions",
       name: "Local Lambda Server",
     },
     {
-      command: `cd "${process.env.PWD}" && ${devServerCommand}`,
+      command: devServerCommand,
       name: "Application Server",
     }
   ]);
