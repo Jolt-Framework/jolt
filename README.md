@@ -18,8 +18,8 @@ For an in-depth look at JAMstack + Serverless and to learn how we built Jolt, re
 ## Jolt Commands
 
 | Command | Description |
-|-|-|
-| `jolt init` | Initialize an application for use with Jolt: Prompts the user to answer a series of questions about the application. Answers are stored in a local configuration file that Jolt references while running other commands. |
+|--|--|
+| `jolt init` | Initializes an application for use with Jolt: Prompts the user to answer a series of questions about the application. Answers are stored in a local configuration file that Jolt references while running other commands. |
 | `jolt dev`|Spins up the user’s front end development server + Lambda development server in order to allow the full application to be run locally. |
 |`jolt functions`| Spins up the Lambda development server by itself.|
 |`jolt deploy`| Deploys the application on AWS.|
@@ -48,7 +48,7 @@ For an in-depth look at JAMstack + Serverless and to learn how we built Jolt, re
 ```sh
 npm i -g jolt-framework
 ```
-
+ 
 **Note:** All Jolt commands should be run from the route of the application
 
 **Demo:** Each "**Example**" below will guide you through building a simple demo app that interfaces with a single serverless function. Once set up, this app can be deployed with Jolt.
@@ -109,10 +109,7 @@ jolt init
  ### Invoking Serverless Functions
 
 - Functions can be invoked in your front-end application with the `.functions` path prefix
-
-**Example:**
-
-- The `/hello/world` function can be invoked with `fetch('/.functions/hello/jolt')`
+- ie: The `/hello/jolt` function can be invoked with `fetch('/.functions/hello/jolt')`
 
 ### Function Templates
 
