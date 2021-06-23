@@ -21,8 +21,8 @@ const dev = async () => {
       name: "Local Lambda Server",
     },
     {
-      command: `cd ${process.env.PWD} && ${devServerCommand}`,
-      name: "Application Server"
+      command: `cd "${process.env.PWD}" && ${devServerCommand}`,
+      name: "Application Server",
     }
   ]);
 }
