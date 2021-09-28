@@ -17,7 +17,7 @@ const Constants = require("../lib/constants/LambdaConstants");
 /** For creating and working with Lambda Functions
  * @class
  */
-class Lambda /*extends something?*/ {
+class Lambda {
   static Client = new LambdaClient({ region: DEFAULT_REGION });
 
   static all = [];
@@ -43,8 +43,6 @@ class Lambda /*extends something?*/ {
     // this.arn = await this.create();
   }
 
-  // I'm assuming the entrypoint file is the LambdaName.js and the file is zipped as LamdaName.zip
-  // So the entry point is LambdaName.handler
   /**
    * Create the Lambda from an S3 Bucket
    * @param {String} role the ARN of the lambda Role

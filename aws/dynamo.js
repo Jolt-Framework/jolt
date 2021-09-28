@@ -3,7 +3,9 @@ const getAccountId = require("./getAccountId");
 
 const Constants = require("../lib/constants/DynamoConstants");
 const { DEFAULT_REGION } = require("../lib/constants/global");
-
+/** For creating and working with DynamoDB
+ * @class
+ */
 class Dynamo {
   static all = [];
   constructor(region = DEFAULT_REGION) {

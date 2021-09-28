@@ -9,12 +9,15 @@ const Policies = require("../lib/constants/policies");
 const Constants = require("../lib/constants/IAMConstants");
 const { DEFAULT_REGION } = require("../lib/constants/global");
 
+/** For creating and working with IAM
+ * @class
+ */
 class IAMWrapper {
   static roles = {};
   static policies = {};
   /**
-   *
-   * @param {string} region if none is specified, the default region will be us-east-1
+   * @constructor
+   * @param {string} region if none is specified during `jolt init`, the default region will be us-east-1
    */
   constructor(region = DEFAULT_REGION) {
     this.client = new AWS.IAM({ region });

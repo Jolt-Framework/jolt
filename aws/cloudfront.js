@@ -5,6 +5,9 @@ const Constants = require("../lib/constants/cloudFront");
 
 const { DEFAULT_REGION } = require("../lib/constants/global");
 
+/** For creating and working with CloudFront
+ * @class
+ */
 class CloudFrontWrapper {
   static distributions = {};
 

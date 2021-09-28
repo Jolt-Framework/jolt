@@ -14,11 +14,18 @@ const Mime = require("mime-types");
 const Constants = require("../lib/constants/S3Constants");
 const { DEFAULT_REGION } = require("../lib/constants/global");
 
+/** For creating and working with S3
+ * @class
+ */
 class S3 {
   static Client = new S3Client({
     region: DEFAULT_REGION,
   });
-
+    /**
+   * @constructor
+   * @param {string} bucketName - The name of the bucket
+   * @param {string} deployment - The name of the deployment
+   */
   constructor(bucketName, deployment) {
     this.bucketName = bucketName;
     this.deployment = deployment;

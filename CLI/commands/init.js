@@ -87,18 +87,6 @@ const userPrompts = async () => {
       validate: (cmd) =>
       cmd.match(/^(us(-gov)?|ap|ca|cn|eu|sa)-(central|(north|south)?(east|west)?)-\d$/g) ? true : "Invalid AWS region",
     },
-    // {
-    //   type: "password",
-    //   name: "AWS_SECRET_ACCESS_KEY",
-    //   message: "Please enter your AWS Secret Access Key:",
-    //   // validate: () => {}
-    // },
-    // {
-    //   type: "password",
-    //   name: "AWS_ACCESS_KEY_ID",
-    //   message: "Please enter your AWS Access Key Id:",
-    //   // validate: () => {}
-    // },
   ];
 
   const confirmQuestion = {
