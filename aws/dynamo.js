@@ -1,18 +1,31 @@
 const AWS = require("@aws-sdk/client-dynamodb");
 const getAccountId = require("./getAccountId");
-
 const Constants = require("../lib/constants/DynamoConstants");
 const { DEFAULT_REGION } = require("../lib/constants/global");
+
 /** For creating and working with DynamoDB
  * @class
  */
 class Dynamo {
+  /**
+   * @type {Dynamo}
+   * every DynamoDB created during runtime
+   */
   static all = [];
+
+  /**
+   * @constructor
+   * @param {string} region the default region will be us-east-1
+   */
   constructor(region = DEFAULT_REGION) {
     this.client = new AWS.DynamoDB({ region });
     Dynamo.all.push(this);
   }
 
+  /**
+   * @param {string} tableName 
+   * @returns {Promise<Dynamo.createTableCommandOutput} Dynamo table
+   */
   async createTable(tableName) {
     try {
       this.tableName = tableName;

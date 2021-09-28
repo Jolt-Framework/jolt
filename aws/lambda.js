@@ -8,10 +8,8 @@ const {
   ListVersionsByFunctionCommand,
   UpdateFunctionConfigurationCommand,
 } = require("@aws-sdk/client-lambda");
-
 const path = require("path");
 const { DEFAULT_REGION } = require("../lib/constants/global");
-
 const Constants = require("../lib/constants/LambdaConstants");
 
 /** For creating and working with Lambda Functions

@@ -4,7 +4,6 @@ const {
   GetRoleCommand,
 } = require("@aws-sdk/client-iam");
 const AWS = require("@aws-sdk/client-iam");
-
 const Policies = require("../lib/constants/policies");
 const Constants = require("../lib/constants/IAMConstants");
 const { DEFAULT_REGION } = require("../lib/constants/global");

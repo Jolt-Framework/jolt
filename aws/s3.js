@@ -9,7 +9,6 @@ const {
   ListObjectVersionsCommand,
   DeleteObjectCommand,
 } = require("@aws-sdk/client-s3");
-
 const Mime = require("mime-types");
 const Constants = require("../lib/constants/S3Constants");
 const { DEFAULT_REGION } = require("../lib/constants/global");
