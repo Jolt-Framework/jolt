@@ -152,7 +152,6 @@ class Lambda {
     } catch (err) {}
   }
 
-  // Maybe look into deleting "event source mappings" to remove triggers after deleting a Lambda? Or something...
   /**
    * Delete an individual Lambda (Should be private... Shhhh... Don't tell anyone!)
    * @param {string} arn - The name/resource number of the Lambda

@@ -6,7 +6,6 @@ const walkDirs = require("../Utilities/walkDirs");
 const fs = require("fs");
 const Zip = require("adm-zip");
 const path = require("path");
-const dotenv = require("dotenv");
 const { zipFunctions } = require("../Utilities/zip-it-and-ship-it/src/main");
 const uniqueId = require("../Utilities/nanoid");
 const fetchLocalSecrets = require("../Utilities/fetchLocalSecrets");
@@ -110,7 +109,6 @@ class JOLT {
     log('Creating Lambdas and API Gateway...');
 
     // gets all functions from functions folder and zips them into an 'archives' folder
-
     await zipFunctions(functionsFolder, "archives");
     const zippedFunctions = fs.readdirSync("archives");
 
@@ -147,7 +145,7 @@ class JOLT {
 
     let arn = await lambda.create(lambdaRole, secrets);
     this.deployment.lambdas.push(arn);
-    // **TODO**: should be able to configure the method for each lambda
+
     const methods = [
       "OPTIONS",
       "GET",
@@ -235,13 +233,12 @@ class JOLT {
     return Promise.resolve({ proxyArn });
   }
 
-  // /**
-  //  * @param {string} bucket the bucket that will act as the origin
-  //  * @param {string} ProxyArn the arn for the edge lambda
-  //  * @param {string} callerReference a caller reference for the distribution
-  //  * @returns {Promise<distribution>} returns the distribution
-  //  */
-
+  /**
+   * @param {string} bucket the bucket that will act as the origin
+   * @param {string} ProxyArn the arn for the edge lambda
+   * @param {string} callerReference a caller reference for the distribution
+   * @returns {Promise<distribution>} returns the CloudFront distribution
+   */
   static async deployToCloudFront(bucket, proxyArn, callerReference) {
     const { AWS_REGION } = this.config.AWSInfo;
     callerReference = callerReference + uniqueId();

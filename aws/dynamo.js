@@ -85,6 +85,15 @@ class Dynamo {
     }
   }
 
+  /**
+   * 
+   * @param {string} projectName the name provided during `jolt init`
+   * @param {string} bucket bucket information
+   * @param {string} version deployment version
+   * @param {string} description deployment description provided during the prompt
+   * @param {string} config additional config information
+   * @returns {Object} properly formatted items object
+   */
   format({ projectName, bucket, version, description, ...config }) {
     const { cloudfrontId } = config;
     let items = {

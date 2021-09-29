@@ -66,7 +66,7 @@ class IAMWrapper {
 
   /**
    *
-   * @param {string} name the name of the role you want
+   * @param {string} name the name of the role you want to find
    */
   async findRole(name) {
     let role = IAMWrapper.roles[name];

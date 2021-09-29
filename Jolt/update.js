@@ -1,6 +1,5 @@
 const S3 = require("../aws/s3");
 const JOLT = require("./jolt");
-const uuid = require("uuid");
 const Builder = require("../Utilities/builder");
 const Teardown = require('../Utilities/Teardown/teardown')
 const Dynamo = require('../aws/dynamo');
@@ -12,7 +11,6 @@ const errlog = (text) => console.log(`\x1b[31m✘\x1b[0m ${text}`);
 
 const createDeploymentTemplate = async (description) => {
   const config = loadConfig();
-
   const { projectId: tableName, projectName } = config.projectInfo;
 
   let version = await db.getNextVersionNumber(tableName);
@@ -81,7 +79,6 @@ const deployUpdate = async (deploymentDescription) => {
   try {
     const bucketName = config.AWSInfo.bucketName;
     const region = config.AWSInfo.AWS_REGION;
-    // const ref = "Jolt-Jamstack:" + uuid.v4();
     const bucket = new S3(bucketName);
     deployment.region = region;
     deployment.bucket = bucketName;
@@ -101,11 +98,9 @@ const deployUpdate = async (deploymentDescription) => {
     await JOLT.updateProxy(updateData.cloudfrontId, proxyArn);
 
     deployment.cloudfrontId = updateData.cloudfrontId;
-
     deployment.deployed = true;
 
   } catch (error) {
-
     errlog(`Unable to complete update, process failed because: ${error.message}`);
     errlog("Initiating teardown... ");
     let teardown = new Teardown(deployment);
