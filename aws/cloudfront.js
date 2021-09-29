@@ -1,17 +1,32 @@
-const { CloudFront } = require("@aws-sdk/client-cloudfront");
 const AWS = require("@aws-sdk/client-cloudfront");
-
 const Constants = require("../lib/constants/cloudFront");
-
 const { DEFAULT_REGION } = require("../lib/constants/global");
 
+/** For creating and working with CloudFront
+ * @class
+ */
 class CloudFrontWrapper {
+  /**
+   * @type {CloudFrontWrapper}
+   * every CloudFront distribution created during runtime
+   */
   static distributions = {};
 
+  /**
+   * @constructor
+   * @param {string} region the default region will be us-east-1
+   */
   constructor(region = DEFAULT_REGION) {
     this.client = new AWS.CloudFront({ region });
   }
-
+  /**
+   * 
+   * @param {string} bucketDomainName automatically generated "bucketName + .s3.amazonaws.com"
+   * @param {string} bucketName automatically generated during `jolt init` e.g. "projectName-bucket"
+   * @param {string} proxyARN the arn for the edge lambda
+   * @param {string} reference a caller reference for the distribution
+   * @returns {object} Distribution object
+   */
   async createDistribution(bucketDomainName, bucketName, proxyARN, reference) {
     this.enabled = true;
     const params = {
@@ -32,6 +47,11 @@ class CloudFrontWrapper {
     }
   }
 
+  /**
+   * @param {*} cloudfrontId the id for the CloudFront distribution
+   * @param {string} proxyARN the arn for the edge lambda
+   * @returns {Promise<WaiterResult>} WaiterResult: { reason?: any; state: WaiterState }
+   */
   async updateEdgeLambda(cloudfrontId, proxyARN) {
     const { ETag, DistributionConfig } = await this.getDistribution(
       cloudfrontId
@@ -58,6 +78,7 @@ class CloudFrontWrapper {
 
     return Promise.resolve(res);
   }
+
   async getDistribution(id) {
     try {
       const { ETag, Distribution } = await this.client.getDistribution({
@@ -142,6 +163,14 @@ class CloudFrontWrapper {
     }
   }
 
+  /**
+   * 
+   * @param {string} bucketDomainName automatically generated "bucketName + .s3.amazonaws.com"
+   * @param {string} bucketName automatically generated during `jolt init` e.g. "projectName-bucket"
+   * @param {string} proxyARN the ARN for the edge lambda
+   * @param {string} reference a caller reference for the distribution
+   * @returns {object} Distribution config object
+   */
   createDistributionConfig(bucketDomainName, bucketName, proxyARN, reference) {
     const buildFolder = CloudFrontWrapper.config.buildInfo.buildFolder;
 

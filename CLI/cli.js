@@ -8,14 +8,10 @@ const dev = require("./commands/dev");
 const runFunctions = require("./commands/runFunctions");
 
 const lambda = require("./commands/lambda");
-// const { destroy } = require("./commands/destroy");
 const projects = require("./commands/rollback");
 const remove = require("./commands/delete");
 const program = new Command();
-// const version = require("../package.json").version;
-// program.version(version).description("Jolt");
 
-// Init
 program
   .command("init")
   .alias("i")
@@ -74,17 +70,5 @@ program.on('command:*', (command) => {
   console.log(`Command '${command}' not recognized`);
   program.help();
 })
-// program
-//   .command("run")
-//   .alias("r")
-//   .description("List projects and make changes.")
-//   .action(projects);
-
-// // Destroy
-// program
-//   .command("destroy")
-//   .alias("destroy")
-//   .description("Deletes a Jolt application")
-//   .action(destroy);
 
 program.parse(process.argv);

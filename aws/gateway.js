@@ -2,12 +2,12 @@ const {
   AuthorizationType,
   IntegrationType,
 } = require("@aws-sdk/client-apigatewayv2");
-
 const Constants = require("../lib/constants/gateway");
-
 const gateway = require("@aws-sdk/client-apigatewayv2");
-//TODO: Make sure API is created before invoking any function besides create.
 
+/** For creating and working with API Gateway
+ * @class
+ */
 class Gateway {
   /**
    * @type {gateway.CreateStageCommandOutput[]}
@@ -33,7 +33,10 @@ class Gateway {
   static all = [];
 
   /**
-   * @param {string} apiName
+   * @constructor
+   * @param {string} apiName automatically generated during `jolt init` "projectName-api"
+   * @param {string} region if none is specified during `jolt init`, the default region will be us-east-1
+   * @param {string} stageName is the version of the current deployment
    */
   constructor(apiName, AWS_REGION, stageName) {
     this.client = new gateway.ApiGatewayV2({ region: AWS_REGION });

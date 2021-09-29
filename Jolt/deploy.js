@@ -65,7 +65,7 @@ const sendToDB = async (deployment) => {
 }
 
 
-let torn;// kept here so it's clear where it's changed
+let torn;
 const teardown = async (message, error, deployment) => {
   try {
     errlog(`${message}: ${error.message}`);
